@@ -1,0 +1,74 @@
+
+
+____________________________________________________________
+
+	Numaralandırma Türleri ( Enumarations )
+____________________________________________________________
+
+C'de ki numaralandırma türleri ile C++'da bazı istenmeyen durumlar oluştu. 3 tanesini iyi anlarsak neden Modern C++'da yeni bir numaralandırma türünün dile eklendiğini daha iyi anlayabiliriz.
+
+(1) Örütlü Dönüşümler
+
+C'den gelen numaralandırma türleri C'de diğer aritmetik türlerle ya da diğer numaralandırma türleriyle örtülü dönüşüm ilişkisi içinde.
+C++ da bir hatayla bunu ilk başlarda korudu.
+
+enum Color{
+	White, Gray, Blue
+};
+
+Color mycolor = Blue;
+
+int x = mycolor;	// legal, örtülü dönüşüm var. Fakat böyle olması saçma.
+				valid but bad
+
+Bunun legal olması çok tehlikeli, yanlışlıkla yapılan dönüşümleri legal kılıyor, hata bulmak zorlaşıyor.
+
+(2) Underlying-Type ( Derleyiciye Bağlı )
+
+Bir derleyicide underlying type int iken bir başka derleyicide long olabilir. Underlying type'ın derleyiciden derleyiciye değişmesi enum türlerinin incomplete type olarak kullanılmasını
+mümkün kılmıyordu. C'de halen böyle.
+
+C'den gelen kurallarda enum sabitlerinin kendi scope'u yok. Enum constant dediğimiz isimlerin scope'u onlara sahip olan enum türleriyle aynı.
+
+* C++'da artık aritmetik türlerden enum türlerine örtülü dönüşüm yok.
+
+
+-----------
+Scoped Enum
+-----------
+
+C++'da eklendi. Enumlara scope kavramı geldi. Eski enumlarda eğer underlying tyoe belirtilmezse underlying type otomatik olarak int oluyor.
+
+	enum Class Color : unsigned char { Blue, Green, Red };	// artık böyle
+
+** eskiden enum türünün underlying type'ı derleyiciye göre değiştiğinden struct içinde incomplete type böyle yapıldı ve sorun çözüldü.
+
+
+İkinci Önemli Farklılık ( Scoped Enum ) 
+---------------------------------------
+	enum Class Color : unsigned char { Blue, Red, Green };
+	Color mycolor = Color :: Blue;	// artık böyle
+	Color mycolor = Green;		// sentaks hatası
+
+
+Bunlar artık scope kazandığı için farklı source file'lardan gelen enum türleri ile çakışmayacak.
+
+
+C++ 20 standardıyla yeni bir araç eklendi.
+
+Bazı durumlarda enumların kendi scopelarının olması koddaki verbosity ( kod kalabalığı ) arttırıyor. 
+	
+	enum Class Suit{ club, diamond, hearth };
+	Suit::club;  // sürekli bu şekilde yazarak kullanmalıyız yeni scope kavramından dolayı. bunu daha basite indirgemek için ise şöyle bir yol izleyebiliriz;
+
+	using enum Suit;
+
+artık nitelenmiş isim(Suit) kullanma zorunluluğunu ortadan kaldırmış olduk.
+
+	x = club;
+	y = hearth;
+	auto x = diamond;
+
+hatta şöyle de oluyor: 		using Suit::Diamond;	// şuan sadece diamond için bu işlemi yapmış olduk
+				x = Diamond;	// hata yok, sadece diamond için geçerli	
+				y = Hearth;	// sentaks hatası
