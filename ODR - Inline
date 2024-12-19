@@ -1,0 +1,157 @@
+
+______________________________________________
+
+	ODR ( One Definition Rule )
+______________________________________________
+
+Yazılımsal varlıkların sadece ve sadece proje içinde bir tane tanımı olabilir. İkinci bir tanımının olması ill formed'tur. Yani dilin kurallarına
+aykırıdır. Ama birden fazla bildirimi olabilir. 
+C++ dili birçok durumda declaration ile definition arasında farklılık görüyor.
+
+* Her declaration bir definition değildir ama her definition bir declarationdur.
+
+* ODR proje bazındadır. Sadece source file bazında değildir.
+
+
+
+*mülakat sorusu
+---------------
+//onur.h
+
+	int x = 12;	onur.h başlık dosyasına değişken definitionu koyduk. Peki doğru mu? - Hayır kesinlikle. Çünkü eper biz bunu bir .h dosyasına koyarsak ve bu header dosyası
+			2 ayrı source file tarafından (aynı projede) include edilirse ODR çiğnenmiş olur.
+
+* Özellikle ODR'da fonksiyonlar ve global değişkenler çok önemlidir. Bunların da birden fazla tanımı olamaz. Hatta bunu derleyicinin saptama imkanı da yok. Çünkü derleyicinin
+derleme birimi kaynak dosya translation unit. En iyi ihtimalle link durumunda hata alırız.
+
+* Fakat ODR aynı kaynak dosyasında çiğnenirse doğrudan sentaks hatasıdır. Çünkü derleyici bunu görür.
+
+Örneğin
+-------
+
+	int x = 5;
+	
+	int x = 80;	direk sentaks hatası.
+
+
+* Bazı istisna durumlar var ki ODR birden fazla tanımı olmasına rağmen çiğnenmiyor.
+
+- Inline Functions
+- Inline Variable
+- Constexpr Functions
+- Template Definitions
+
+
+
+
+
+
+____________________________________
+
+	Inline Expansion
+____________________________________
+
+Derleyicinin kullandığı bir optimizasyon tekniği ve en etkili optimizasyon tekniklerinden biri.
+C++'da en önemli kurallardan biri as if rule denilen kural.
+
+Yani derleyici Observable Behaviour değişmediği sürece, kodu farklı şekilde ele alabilir.
+Derleyicinin yaptığı optimizasyonlar kodun efficient olmasını sağlar.
+
+Derleyicinin Inline Expansion yapabilmesi için;
+
+(1) Olmazsa olmaz koşulu, derleyicinin fonksiyon çağrısının yapıldığı noktada bu fonksiyonun tanımını görmesi gerekir. Sadece bildirimini, prototipini
+görse yapamaz.
+
+(2) Derleyiciye bağlı, derleyici uygun bulursa, isterse.
+
+(3) Derleyici yapabilirse. ( Yani isteyip de yapabilirse. İsteyip yapamadığı da olabilir. )
+Mesela iç içe kontrol deyimleri falan varsa, recursive çağrılar çoksa vs. derleyicinin onu inline expanse etme durumu azalır.
+
+(4) Derleyicilerin tipik olarak inline expansion ile ilgili switchleri var. Yani mesela "always inline expansion yap" gibi bir switch olabilir. Veya tam tersi olarak
+".. yapma" diye bir switch olabilir.
+
+* Inline expansion ile Inline function birbiri ile karıştırılabiliyor.
+
+
+
+
+___________________________________
+
+	Inline Function
+___________________________________
+
+Fonksiyonun inline olarak tanımlanması derleyiciyi inline expansion yapmaya teşvik eder. Fakat derleyici inline expansion yapmayabilir, yapmak zorunda değil.
+Tam tersi olarak Inline olarak tanımlanmamış fonksiyonlar için de inline expansion yapılamaz diye bir şey yok.
+
+
+O Zaman Neden Kullanalım?
+-------------------------
+Dilin kuralları diyor ki inline fonksiyonlar ODR'ı şu koşulda çiğnemiyor: birden fazla kaynak dosyada eğer inline fonksiyon özdeş olarak tanımlanırsa
+ODR ihlal edilmez.
+
+//onur.h
+inline int sum_square(int x, int y)
+{
+	return x * x + y * y;				Bunlar özdeş değil! Her tokeni aynı olmak zorunda!
+}
+
+//oguz.h
+inline int sum_square(int x, int y)
+{
+	return x * x;
+}
+
+
+* Örneğin inline fonksiyonu neco.h başlık dosyasında tanımlasak ve proje içinde birden fazla kaynak dosyasına include edersek ODR'ı ihlal etmemiş oluruz.
+
+* Inline fonksiyonlar bu koşulları sağlarsa ODR çiğnenmez. Derleyici de bu fonksiyonun tanımını çağırıldığı yerde gördüğü için inline expansion yapma imkanına
+sahip olacak.
+
+* Yani hem derleyicinin fonksiyonun tanımını görmesini sağlamış oluyoruz hem de ODR'ı çiğnememiş oluyoruz. E derleyici de tanımı görebildiği için
+optimizasyon yapma imkanına sahip oluyor.
+
+
+
+header-only libary
+------------------
+Bir fonksiyonu inline yaparak, modülün ikinci bir dosyası olmadan sadece tek bir başlık dosyasından oluşan yani ona eşlik eden derlenecek bir kod dosyası olmayan bir
+modül oluşturabiliriz. Böyle modüllere header-only library denir.
+
+O zaman bütün fonksiyonları Inline yapalım?
+- Genel olarak derleyiciye o fonksiyon için inline expansion yapma imkanı vermek istiyorsak ve inline expansion'dan bir kar elde edilecek ise tipik olarak kodu çok küçük,
+az olan, sık çağrılan fonksiyonlar buna önemli bir aday.
+-Bazen de gereksiz inclusionlara neden olabilir.
+
+
+
+** Önemli
+---------
+Inline fonksiyonun derlenmiş hali, derlenmiş kodda bulunmak zorunda değil. Çünkü eğer derleyici bu fonksiyona yapılan çağrıların hepsini inline olarak expand ederse fonksiyonun
+derlenmiş hali ayrıca derlenmiş kodda bulunmak zorunda değil.
+
+
+* Inline function Modern C++'da gelen bir özellik değil, daha önceden de vardı.
+
+
+
+
+
+________________________________
+
+	Inline Variable
+________________________________
+
+Inline anahtar sözcüğü global değişkenlerin tanımında da kullanılır hale getirildi. Inline function ile hemen hemen aynı.
+Global değişkenlerde geçerli.
+
+* Örneğin global değişkenimizi başka kod dosyalarında da kullanmak istiyoruz, external linkage'a ait hale getiririz.
+
+	onur.h		onur.cpp
+	------		--------
+
+    extern int x;	int x = 5;
+
+
+
+Direk tanımı başlık dosyasına koyarsak ODR ihlal edilmiş olur. Bunların yerine inline variable şeklinde tanımlarız.
+
