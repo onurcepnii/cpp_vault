@@ -1,0 +1,182 @@
+
+
+_________________________________________
+
+	Scope ve NameLookup
+_________________________________________
+
+* Compile time'a ilişkin.
+* İsimlere ilişkin bir kavram. ( identifier )
+
+Bir ismin scope'u demek o ismin bilindiği, kullanılabildiği kod alanı demektir.
+Scope değişkenlerle ilgili bir kavram değil. İsimlerle ilgili bir kavram.
+Bu isim bir değişkene de ait olabilir, bir türe veya etikete de ait olabilir.
+
+
+Scopes in C++
+-------------
+C++'da 5 tane scope var.
+
+Namespace Scope
+Block Scope
+Class Scope
+Function Prototype Scope
+Function Scope
+
+
+Name Lookup ( İsim Arama )
+--------------------------
+Derleyici kodu anlamlandırmak için derleme işleminin belirli bir sürecinde koddaki isimlerin hangi varlıklara ilişkin olduğunu
+anlamak zorunda.
+
+Informal olarak; Derleyicinin bir isim için şu sorunun cevabını aradığı süreç ==> "Bu neyin ismi?"
+
+(1) Name Lookup
+	(2) Context Check
+		(3) Access Control
+
+Sıra böyle gidiyor. Önce isim aranır. Aranan isim bulunduktan sonra o ismin kullandığı ifade/yer/bağlam içinde dilin kurallarına göre legalitesi sorgulanıyor.
+Legalitede bir problem yoksa o ismin o kod tarafından kullanılma hakkı var mı veya yok mu ona yönelik kurallar kontrol ediliyor. ==> Access Control
+
+Örnek:
+	int x(int);			(1) Namelookup yapıldı ve hata yok, isim bulundu.
+	int main(){			(2) Context Check yapıldı fakat bu isim atama operatörü operandı olamaz. Sentaks hatası olacak.
+		x = 4;
+	}
+
+
+Namelookup
+a) başarılı olabilir
+	derleyicinin aranan ismin hangi varlığa ilişkin olduğunu anlaması demek.
+b) başarısız olabilir
+	derleyicinin aranan ismin hangi varlığa ilişkin olduğunu bulamaması demek. ve namelookup'ın başarısız olması her zaman sentaks hatasıdır.
+	(1) İsmin bulunamaması.
+	(2) Birden fazla isim bulunması ve dilin kurallarına göre bunların arasında bir ayrım yapılamaması.
+	    (ambigious hatası verir)
+
+Name Lookup Neden Başarısız olabilir?
+-C dilinde name lookup'ın başarısız olmasının belki de tek nedeni aranan ismi bulunamaması.
+
+
+
+
+The Golden Rules Of Namelookup
+------------------------------
+(1) İsim arama bir sıra dahilinde yapılır.
+	Buraya bak, bulamazsan şuraya bak vs.
+(2) Aranan isim bulununca isim arama sona erer ve bir daha başlamaz.
+
+mülakat/örnek
+-------------
+				
+int x(int);			Örneğin burada sentaks hatası verir fakat neden? Çünkü burada derleyici 2 numaralı ifadeye geldiğinde önce x ismin aramaya 
+				name lookup kurallarına göre başlar. Yani kendi bulunduğu scope içinde aramaya başlar, bulursa name lookup sonlandırılır, bulunamazsa bir üst
+				blokta arama devam eder. Burada aynı blokta bulunan x isminin definition'unu bulur( int x = 5 ) ve name lookup sonlandırılır. Context check aşamasına
+				geçilir fakat x(12) bir fonksiyon çağrı ifadesidir ve bu yüzden context check aşaması sonlandırılır ve hata verir.
+int main()
+{
+	int x = 5;	// 1
+	x(12);		// 2
+}	
+
+
+(3) 3. altın kurala daha sonra değineceğiz.
+
+
+
+
+
+
+____________________________________________________
+
+	Scope Resolution Operator ( :: )
+____________________________________________________
+
+
+C'de bu operatör yok.
+Bu operatörün farklı farklı kulanım biçimleri var.
+Ancak şimdilik bu operatörün kullanım biçimlerini 2'ye ayıralım;
+
+
+(1) Unary Operator Olarak Kullanımı
+-----------------------------------
+
+	::x
+
+Böyle kullanırsak, bu derleyiciye operandı olan ismin global namespace'de aranması talimatı.
+
+	::x // x ismini global namespace'de arayacak
+
+* Bir isim ya qualified Name'dir ya da unqualified Name'dir. İsmin qualified olması demek ismin aşağıdaki operatörlerden birisinin
+operandı olarak kullanılması demek.
+
+
+
+Qualified Name ( Nitelenmiş İsim)
+_________________________________
+
+	a.b
+	
+	p->x
+
+	::a
+
+	x::y
+
+İsmin unqualified name olması ise bu operatörlerin operandı olmadan kullanılması, yalın olarak kullanılması demektir.
+
+
+
+*mülakat sorusu
+---------------
+
+int x = 5;
+int main()
+{
+	int x = x;
+}
+
+Cevap = UB.
+
+Burada Namelookup kurallarına göre isim aranacak. 	int x = x;
+								^
+								|
+							     isim bulundu. fakat bu x, x'in kendisi.
+							Yani kendi çöp değeri ile ilk değer vermiş oluruz.
+
+Eğer global değişkenin değeri ile initialize etmek istersek ::x kullanırız;
+	
+	int x = ::x;
+
+
+
+
+*mülakat sorusu
+---------------
+Soru: 1 numaralı ifade Recursive bir çağrı mıdır?
+Cevap: Hayır.
+
+void foo(int foo){
+	foo(foo); // 1		==> bu isim (foo) scope'dan dolayı parametre değişkeninin ismidir. Fonksiyonun ismi değil.
+}				    yani name lookup ile ilk olarak parametre değişkeninin ismini bulacak.
+
+Bu kodun recursive hali;
+
+	void foo(int foo)
+	{
+		::foo(foo);
+	}
+
+
+
+
+Source File ve Translation Unit
+_______________________________
+
+İkisi aynı şey değil.
+
+Source File = Preprocessor directivelerinin yapılmamış halı, yürütülmemiş hali.
+
+Translation Unit = Preprocessor directiveleri işlenmiş, preprocessor time tamamlanmış ve sıra derleyiciye gelmiş.
+
+
