@@ -1,3 +1,11 @@
+ÖZET
+2 kural seti var. 
+(1) geçerli olduğu durum eğer identifier alırsa oluyor. aldığı identifier'ın hangi türden declare edilmişse o tür elde edilir.
+(2) geçerli olduğu durum eğer ifade alırsa oluyor. aldığı ifadenin value category'si;
+											PR ise elde edilen tür	T
+											L  ise elde edilen tür  T&
+											x  ise elde edilen tür  T&&
+
 
 __________________________
 
