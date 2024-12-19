@@ -1,0 +1,314 @@
+
+
+____________________________________
+
+	    Auto Type Deduction
+____________________________________
+
+
+Typeholder olarak görev yapıyor. Derleyici yapacağı çıkarımla Auto'nun yerinde bir türün kullanıldığını anlayacak.
+
+* Kritik Kısım: Tür çıkarımı tanımlanan değişken için mi yapılır yoksa auto keywordü karşılığı mı?
+- auto için yapılıyor.
+
+Yani örneğin auto için tür çıkarımı aşağıdaki gibi int olursa;
+	
+	int a = 10;
+	auto &x = a;
+
+burada int türden değişken tanımlanmaz. int& türden tanımlanmış olur. auto için yapılan tür çıkarımı aslında int. 
+
+
+Önemli Not
+----------
+Value category ifadeyi niteleyen bir terim. Bir değişkenin value kategorisi diye bir şey olmaz. İfadelerin value kategorisi olur.
+	
+	int x = 5;  // sadece x'in data type'ından bahsedebiliriz burada
+
+Örneğin x değişkeninin value kategorisi L-Value demek yanlış olur. Çünkü x bir ifade değil burada. Fakat şöyle yazarsak;
+	
+	x;	==> Şuan bu bir ifadedir ve value kategorisinden bahsedebiliriz.
+
+
+
+
+** Önemli Kural **
+------------------
+Bir değişkenin türü referans türü olabilir fakat bir ifadenin türü referans türü olamaz.
+
+	int a = 5;	a'nın data type ==> int
+	int& r = a;	r'nin data type ==> int&
+
+	    a		a ifadesinin data type int
+	    r		r ifadesinin data type int ( int& değil, çünkü bir ifadenin türü referans türü olamaz. )
+
+
+* auto ile tanımlanan değişken default olarak initialize edilemez.
+
+	auto x;	// invalid
+
+* ilk değer veren ifadenin türü neyse auto'ya karşılık gelen tür odur.
+	
+	auto x = 10;  // int = auto
+
+
+
+
+
+
+
+3 Farklı Durumda Yapılan Çıkarımlar ( auto keyword )
+----------------------------------------------------
+
+ 1) auto x = expr;
+ 2) auto &x = expr;
+ 3) auto &&x = expr;
+
+bu 3 durumda yapılan çıkarımlarda farklılıklar var. 
+
+
+
+1) auto x = expr
+________________
+
+Bu durumda auto'nun karşılığı olan tür, doğrudan ilk değer veren ifadenin türü.
+	
+	auto x = 10; // yani burada ilk değer veren ifade 10 ifadesi. 10 ifadesinin türü auto için çıkarım yapılacak tür
+
+	char c = 5;
+	auto a = c;	// burada ilk değer veren ifade c ifadesi, onun türü de char. o halde auto için yapılacak tür çıkarımı ==> char
+
+dikkat*
+	auto a = +c;	// burada ilk değer veren ifade +c ifadesi. Bu ifadede + operatörünün operandı olan c char türünde. Aritmetik bir işlem
+			// olduğu için integral promotion uygulanır ve bu ifadenin türü int olur. O halde auto için yapılan tür çıkarımı int.
+
+
+*** Eğer ilk değer veren ifade const bir nesneye ilişkinse constluk düşer.
+
+	const int x = 10;
+	     auto y = x; // ilk değer veren ifade x, ve bu ifadenin türü const int. Fakat bu durumda constluk düşer ve auto için yapılan tür çıkarımı
+			 // int olarak yapılır.
+
+* int x = 10;
+  int& r = x;
+  auto y = r; // ilk değer veren ifade r ifadesi. r ifadesinin türü int (dikkat r değişkeninin türü değil, ifadenin türü). O halde auto için yapılan
+	      // tür çıkarımı int olacak.
+
+
+* Hem const hem referans olursa da kural yine aynı.
+
+	int x = 132;
+	const int& r = x;
+	auto y = r;		// ilk değer veren ifade r ifadesi, bu ifadenin türü const int. Fakat bu durumda constluk düşüyor. O halde auto için
+				// yapılan tür çıkarımı int.
+
+
+* int ar[5] {};
+  auto x = ar;	// array decay uygulanır. &ar[0] olur.
+		// ilk değer veren ifade(&ar[0])nin türü adres türü yani int*. O halde auto için yapılacak tür çıkarımı int* olacak.
+
+**dikkat**
+	
+  const int ar[5] {};
+  auto x = ar;		// burada yapılan tür çıkarımı const int* olacak.
+
+Hani constluk düşüyordu?
+-Buradaki constluk kendisinin constluğu değil, low-level constluk. Low-level yani pointer to const int.
+
+* auto p = "kaveh";	// C++ dilinde statik tür sisteminde string literalleri elemanları const char olan dizilerdir.
+			// Yani ilk değer veren ifadenin türü ==> const char[6]
+			// burada yine array decay uygulanacak ve p const char* olacak. Yani auto için yapılan tür çıkarımı const char*
+
+* int foo(int);
+  auto x = foo;	// burada ilk değer veren ifade foo ifadesi. Function call parantezleri ile yazılmamış o halde Function Decay olacak.
+		// yani &foo'ya dönüşecek. &foo ifadesinin türü ise int(*)int'dir. Yani bir fonksiyonu tutan pointer/adres türü.
+
+
+
+******************************
+ÖZET 
+
+    auto x = expr    İfadelerinde tür çıkarımı ilk değer veren ifadenin türüne göre yapılır.  
+		     Tür çıkarımı yapılan ifadede constluk varsa eğer düşer. Fakat bu constluğun nesneye ait olması yani top-level constluk olması gerekir. 
+		     Eğer low-level constluk varsa bu durumda constluk düşmez.
+		     Array Decay, Pointer Decay uygulanır.
+			 
+******************************
+	
+
+
+
+2) auto &x = expr
+_________________
+
+* expr her zaman L-Value reference olmalı. Yoksa sentaks hatası olur.
+
+	int x = 10;	
+	auto &r = x;	// x'in türü ne? - int. O halde auto için yapılan tür çıkarımı int olacak.
+			// ifade şöyle ilk değer verilmiş gibi olur ==> int& r = x;
+	
+	auto &r = 10;	// hata. ilk değer veren ifadenin value kategorisi L-Value olmalı.
+
+* Constluk düşmez. Zaten düşse saçma olur.
+
+	const int x = 5;
+	auto &r = x;		// x ifadesinin türü const int. constluk düşmeden auto için tür çıkarımı yapılır ==> const int
+				// yani böyle olmuş olur ==> const int &r = x;
+
+** int ar[5] = {1,2,3,4,5};
+   auto &x = ar;		// array decay uygulanır. &ar[0] olur. bu ifadenin türü adresi türüdür.
+				// bu ifade için yapılan tür çıkarımı ==> int(&)[5]. Yani şöyle olmuş olur ==> int(&r)[5] = ar;
+
+
+
+---------------------------------------------------------------------------------------------------
+
+ÖNEMLİ NOT:
+
+	auto &r = expr;		tipi tür çıkarımında function ve array decay uygulanmaz.
+
+---------------------------------------------------------------------------------------------------
+
+
+*** auto x = "onur";		// Tür çıkarımı const char* olarak yapılacak
+    auto &y = "onur";		// Array decay uygulanmaz. const char(&y)[5] = "onur";
+
+				// fonksiyon ismiyle ilk değer verildiği zaman bu durumda yine decay gerçekleşmeyecek.
+
+***
+  çok önemli
+	
+  int foo(int);
+  
+  foo'nun türü ne? - int(int)
+ 
+  foo eğer bir ifadede kullanılır ve function decay olursa foo'nun türü int(*)int'e dönüşür. yani int(int) türünden fonksiyon tutan adres türü.
+
+  auto r = foo;	// referans deklaratörü olmadığı için function decay uygulanır. auto yerine gelen tür fonk. türü değil adres türü olacak.
+  
+  int(*r)(int) = foo;
+
+  auto yerine gelen tür fonksiyon türü olursa ==> int(int) türü olur. Ancak fonksiyon decay olduğu için auto yerine gelen tür ==> int(*)int olur.	
+
+
+***	int foo(int);
+	auto &r = foo;	// bu durumda foo için function decay uygulanmaz. foo ifadesinin türü int(int) olur.
+			// bu durumda auto için yapılan tür çıkarımı int(int).
+
+ 	yani yerine koyarsak ==> int(&r)(int) = foo; Bu durumda r demek foo demek olmuş olur **
+	
+	r(20); 		// bu ifadede r aslıda foo demek. O halde bu ifade şuna eşit ==> foo(20);
+
+
+
+* Auto'nun tek başına bulunma zorunluluğu yok. Başına const, constexpr, static vs. gelebilir.
+
+	const auto &r = foo;
+	static auto &r = foo;
+
+
+
+******************************
+ÖZET 
+
+    auto &x = expr      Tür çıkarım yine aynı şekilde yapılır fakat constluk düşmez.
+			Array Decay ve Function Decay uygulanmaz.
+			
+
+******************************
+
+
+
+
+
+3) auto &&r = expr | Forwarding Reference / Universal Reference
+_______________________________________________________________
+
+* Herhangi bir türden, herhangi bir value kategoriden bir ifade ile ilk değer verilebilir. Yani herşeye bağlanır.
+* İlk değer veren ifadenin ne olduğuna bağlı olarak r için elde edilecek nihai tür ya L-Value referans türü ya da R-Value referans türü olacak.
+
+Kurallar
+--------
+
+* Eğer ilk değer veren ifade(initializer) L Value ise, r L value referansı olacak.
+
+	const int x = 10;	
+	auto &&r = x;		// Initializer ifadesi x'in value kategorisi L value. O halde universal referansımız L value referansa dönüşecek.
+
+
+* Eğer initializer ifadesi R-Value ise, r referansı R-Value referansı olacak.
+
+	int x = 10;
+	auto &&r = x + 4; // initializer ifadesi( x + 4 )nin value kategorisi R value. O halde universal referansımız R value referansa dönüşecek.
+
+
+***
+  DİKKAT == bu iki kuralda da r'nin value kategorisinden bahsediliyor, auto için yapılan çıkarımdan değil!
+
+
+
+Şimdi gelelim auto için yapılan tür çıkarımına.
+
+Universal Reference kullanıldığında auto için yapılan çıkarım, yani autonun yerine ne geleceği ilk değer veren ifadenin value kategorisine bağlı.
+
+
+
+* İlk değer veren ifadenin value kategorisi L-Value ise auto için yapılan çıkarım L-Value referans türü olacak.
+
+	L-Value auto ==> T&
+
+* İlk değer veren ifade R-Value ise auto için yapılan çıkarım T olacak.
+	
+	R-Value auto ==> T
+
+Örnek:
+------
+int x = 10;					int x = 10;
+auto &&r = x;					auto &&r = 20;
+	
+auto için yapılan çıkarım ne?			
+						
+cevap : int&					cevap : int
+
+
+Yani R-Value ile ilk değer verirsek auto için yapılan çıkarım int olduğu için r R-Value referansı olacak.
+
+
+Reference Collapsing
+--------------------
+
+Dilin içinde öyle yerler var ki, referansa referans türü oluşuyor. Fakat referansa referans türü dilin kurallarına göre olmadığı için o bir referans
+türüne bağlanıyor.
+
+* Eğer sol taraf referansına sol taraf referansı oluşursa;
+	
+	T&	&	T&
+			-> sol taraf referansına bağlanır.
+
+* Eğer sağ taraf referansına sol taraf referansı oluşursa yine sol taraf referansına bağlanır.
+	
+	T&	&&	T&
+
+* Sol taraf referansına sağ taraf referansı oluşursa yine sol taraf referansına bağlanır.
+
+	T&&	&	T&
+
+* Ama sağ taraf referansına sağ taraf referansı oluşursa sağ taraf referansı oluşuyor.
+
+	T&&	&&	T&&
+
+
+ ----------------------------------------
+|	Reference Collapsing Table	 |
+ ----------------------------------------
+|					 |
+|	T&	&	==>	T&	 |
+|	T&	&&	==>	T&	 |	
+|	T&	&	==>	T&	 |
+|	T&&	&&	==>	T&&    --|--> Sadece burada T&& oluşuyor.	
+|					 |
+|					 |
+ ----------------------------------------
+
+
+
