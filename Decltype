@@ -1,0 +1,174 @@
+
+__________________________
+
+	Decltype
+__________________________
+
+Her zaman bir tür elde ederiz. decltype kullanmak için bir değişken tanımlamamız gerekmiyor.
+Tür gereken, bir type yazabildiğimiz her yerde decltype ile çıkarım tapılan türü kullanabiliriz. Yani decltype'ın kullanıldığı yapı
+doğrudan bir türe karşılık geliyor.
+
+Örneğin decltype ile olan bir ifade int, int*, int&, const int vs. olabilir.
+
+	decltype(10)
+	decltype(x)
+	decltype(x + 5)
+	decltype(x.y)
+
+
+Decltype'a ilişkin 2 ayrı kural seti var.
+
+
+1.KURAL SETİ
+------------
+Bir operatör gibi düşünürsek, decltype'ın operandı isim formunda olacak. Yani bir identifier olacak.
+
+	decltype(x)
+	decltype(y)
+
+	bunlar da isim formatında;
+
+	decltype(a.y)
+	decltype(p->m)
+
+* Bu kural setindeki kural şu; aldığı identifier hangi türden declare edilmişse o tür elde edilir.
+	
+	int ar[4]{};
+	
+	decltype(ar);		==> int[4] türü
+	decltype(ar) x;		==> int x[4] türü demek
+	
+	int x{2432};
+	int &r = x;
+	decltype(r);	==> int&, çünkü int& ile initialize edilmiş. Yoksa x ifadesi int& türünde değil, zaten bir ifade referans türünde olamaz hatırla!
+	int &&r = std::move(x);
+	decltype(r);	==> int&&
+	
+	
+Structların memberleri için de geçerli.
+
+	Struct Nec{
+
+	int x;
+	double *p;
+	
+	};
+
+	Nec mynec;
+	
+	decltype(mynec.p);	==> double* türü
+	decltype(mynec.x); 	==> int türü
+
+	Nec* necptr = &mynec;
+	decltype(necptr->p); 	==> double türü
+
+
+
+
+
+2.KURAL SETİ
+------------
+Decltype'ın operandının bir expression olması durumunda yani isim formunda olmayan bir ifade olması durumunda uygulanan kural seti.
+
+	decltype(10);
+	decltype(x + 3);
+
+DİKKAT:
+   decltype içine yazılan x ile (x) farklılık oluşturur ve ikiside farklı kural setine tabidir. 
+
+	decltype(x)	==> identifier olduğu için ilk kural seti
+	decltype((x))	==> bu şekilde bir ifade olarak ele alınır yani ikinci kural setine tabidir.
+
+
+
+decltype(expr)
+
+Elde edilen türün hangi tür olduğu, bu ifadenin primary value kategorisine bağlıdır.
+
+Expression'un value kategorisi;
+
+	PR ise elde edilen tür	T
+	L  ise elde edilen tür  T&
+	x  ise elde edilen tür  T&&
+
+
+
+Örnekler
+--------
+
+	decltype(4)	==> PR Value olduğu için int
+	int x = 56;
+	dectype(+x);	==> PR Value, int
+	decltype(x++);	==> PR Value, int
+	decltype(++x);	==> L Value, int&
+
+___________________________
+
+
+	int x = 56;
+	int* ptr = &x;
+	decltype(*ptr)		==>	L Value, int&
+
+
+	int a[5]{};
+	decltype(a[3])		==>	L value, int&
+
+
+
+Mülakat Sorusu
+--------------
+
+	int x = 10;
+	decltype(x);		==> int
+	decltype((x));		==> isim formundan ifade formuna geçti.
+
+NOT:
+	int foo();
+	int& bar();
+	int&& baz();
+
+	foo()	==> bu ifadenin value kategorisi PR Value
+	bar()	==> bu ifadenin value kategorisi L Value
+	baz()	==> bu ifadenin value kategorisi X Value
+
+* Eğer çağrılan fonksiyonun geri dönüş değeri L value referans türü ise fonksiyon çağrısının oluşturduğu
+ifadenin değer kategorisi L Value'dir.
+
+* Fonksiyonun geri dönüş değeri R Value referans türüyse fonksiyon çağrı ifadesi value category olarak X Value'dir.
+
+	decltype(foo())		==> PR Value, int
+	decltype(bar())		==> L Value, int&
+	decltype(baz())		==> sağ taraf referans türü, int&&
+
+	decltype(baz()) r = x;	// hata çünkü R Value referansa L value ifade ile ilk değer verildi.
+	decltype(baz()) r = x + 3; // burada R value ile init. ediyoruz. Hata yok
+
+
+
+NOT | Unevaluated Context
+-------------------------
+decltype'ın operandı olan ifade için işlem kodu üretilmez.
+
+	int x{44};
+	decltype(x++) y = 5;
+	cout<<"x = "<< x << '\n';
+
+Output: x = 44
+
+Yani burada işlem kodu üretilmez. Side effect uygulanmaz.
+
+	int* ptr = nullptr;
+	int x{};
+	decltype(*ptr) y = x;
+
+*ptr bir ifade, yani 2. kural seti uygulanacak. İfadenin türü int, value kategorisi L Value. Dolayısıyla
+int& türü elde edilir. 
+
+	int& y = x;	oldu yani.
+
+Bu işlem için işlem kodu üretilse, *ptr ile nullptr'ı derefence ettiğimiz için tanımsız davranış olur. Ancak işlem
+kodu üretilmediği için UB olmaz.
+
+
+
+
