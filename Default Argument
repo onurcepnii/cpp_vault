@@ -1,0 +1,59 @@
+
+__________________________________
+
+	Default Argument
+__________________________________
+
+
+C'de yok fakat C++'da var. Örneğin 3 tane parametresi olan bir fonksiyona 3'ten daha az argümanla çağrı yapma imkanı tanıyor.
+
+	int foo(int,int,int=10);
+	
+	foo(2,5,1) ==> varsayılan argüman kullanılmadı
+
+	foo(1,2);  ==> 3.parametre varsayılan argüman kullanır -> 10
+
+
+Bir fonksiyonun birden fazla parametresi için default argument kullanabiliriz. Fakat dikkat etmemiz gereken bazı kurallar var.
+
+	-Bir fonksiyonun herhangi bir parametresi varsayılan argüman alıyorsa sağındaki tüm parametrelerin de varsayılan argüman alması gerekiyor.(Wrapper function yazarak bunun
+	önüne geçebiliyoruz.)
+	
+		int foo(int, int=20, int) => sentaks hatası
+		int foo(int, int=10, int=2) => valid
+
+
+	-Pointer ve referans parametreler de varsayılan argüman alabilir.
+
+		int x = 10; //global variable
+
+		void foo(int& = x) // default arg. olarak global değişken olan x'i aldı.
+
+	-Default argument olarak herhangi bir ifade olabilir.
+		
+		int x = 10;
+		void foo(int y = x + 5); // Eğer argüman gönderilmeden çağırılmışsa default argument olarak x+5 alacak.
+
+	- int foo(int = 2, int = 5);
+	  int bar( int x = foo());
+	  
+	 	 default argument olarak bar(foo(2,5)) almış olur.
+
+	- void foo(const char* p = nullptr)
+		bu fonksiyonun parametresin ya bir argüman göndereceğiz, argüman göndermediğimiz zaman nullpointer ile çağırmış oluruz.
+
+
+	- Daha önce bildirilen bir fonksiyonu redeclaration yaparak default argument ekleyebiliriz.
+	
+
+	- void foo(int x, int y = x) // geçerli değil
+
+
+	- Bazı fonksiyon bildirimlerinde varsayılan argüman kullanılmasının nedeni sadece implementasyonun default argument kullanmış mı
+	  kullanmamış mı onu anlamasını sağlamak.
+		
+		void print_date(int day = -1, int mon = -1, int year = -1);
+
+		örneğin bu bildirimde eğer kullanıcı bu parametrelerden birini es geçerse default olarak -1 gönderilecek. Bu sayede fonksiyon
+		aldığı argümanları sınayarak örneğin -1 gönderilen argümanların yerine o günün tarihine ait değeri girecek. Bu şekilde bir kullanım
+		mevcut.
