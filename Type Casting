@@ -1,0 +1,151 @@
+static cast eklenecek**
+dynamic cast eklenecek**
+
+
+
+const cast
+__________
+
+a) ref semantiği ile
+b) pointer semantiği ile kullanılabilir
+
+kullanım amacı tipik olarak const nesne adresinden const olmayan nesne adresine dönüşüm.
+
+ya da referans semantiğinde.
+
+bu dönüşümler zaten static cast ile yapılamıyor, sentaks hatası verir.
+
+örnek:
+	int x{};
+
+	const int* p = &x;
+	
+	int* ptr;
+	
+	ptr = p; // fakat böyle bir örtülü dönüşüm yok. bunu gerçekten yapmak istiyorsak const cast operatörünü kullanmalıyız.
+
+	böyle yaparız -> ptr = const_cast<int*>(p);
+
+ya da diğer örnek referans semantiği ile;
+
+	int x{};
+	const int& cr = x;
+	
+	const_cast<int&>(cr);
+
+fakat ortada adres semantiği yoksa const cast kullanamayız.
+örneğin böyle bir şey yok;
+
+	const int x{343};
+
+	const_cast<int> -> şuan bile editör hatalı olarak işaretler.
+
+
+* constluğu ikiye ayırmalıyız. birisi -> contractual constness diğeri -> physical constness
+
+contractual constness
+_____________________
+
+int x{1231};
+
+x const bir nesne değil.
+
+int x{1231};
+const int* p = &x;
+*p // compile time ifadesi olarak bakarsak const bir nesnedir. ancak özünde x const değil. bu contractual constness. 
+
+diyorum ki p vasıtası ile x e eriştiğimde onu const bir nesne olarak ele alıcam.
+
+dolayısıyla benim const cast yapmam herhangi bir şekilde tanımsız davranış oluşturmaz çünkü zaten p nin gösterdiği nesne aslında const değil.
+
+	int* ptr = const_cast<int*>(p);
+
+ancak şöyle olursa;
+
+const int x = 12321;
+
+const int* p = &x;
+
+int* ptr = const_cast<int*>(p);  
+
+*p // şimdi artık *p sadece contractual const değil aynı zamanda physical const.
+
+yani şimdi p yi gidip de (x in adresi) low level const olmayan bir pointer a atadığımız da o zaman bu yanlış, yapmamamız gerekiyor.
+
+aslında dilin kuralları const olmayan nesne adresi türünden const olan nesne adresi türüne de dönüşümde const casting kullanılmasına olanak veriyor.
+
+özellikle generic kodlarda karşımıza çıkabilir.
+
+	int x = 123;
+	
+	auto p = const_cast<const int*>(&x); // type deduction ile p nin türü const int* olacak. bu dönüşüm zaten örtülü olarak yapılıyor.
+
+T* dan const T*' a zaten örtülü(implicit) dönüşüm var.
+
+
+reinterpret_cast
+________________
+
+çok daha riskli, çok daha dikkatli olarak kullanmamız gerekiyor. legal olması doğru kullanıldığı anlamına gelmez.
+kullanıldığı yerler;
+
+a)bir nesne adresini farklı türden bir nesne adresi gibi kullanmak ( bunun aynı zamanda doğru olması lazım )
+b)bazen de tamsayı değerlerini örneğin adres değerleri olarak kullanmak. burada artık diğer type cast operatörlerinin kullanımı legal deil.
+
+	int x{12312};
+	
+	char* p = &x; // bu legal değil çünkü türler farklı. C olsa (char*) type cast yazabiliriz. C++ da tercih edilmez.
+	
+	char* p = reinterpret_cast<char*>(&x); // C++ da böyle yaparız.
+
+veya bir başka örnek;
+
+	int* p = 0x1AC4; // C++ da bu yasak.
+
+	int* p = reinterpret_cast<int*>(0x1AC4); // şuan legal
+
+
+***yani özetle farklı adres türleri arasında ya da bazen bir tamsayı ifadenin adres olarak kullanılması gerektiğinde kullanılır.
+
+
+
+sık yapılan bir sentaks hatası:
+
+	const int x = 56;
+	
+	reinterpret_cast<char*>(&x); // sentaks hatası. çünkü burada 2 ayrı dönüşüm var.
+
+	2 ayrı dönüşümün gerektiği yerde tek bir dönüşüm yapamayız. dolayısıyla şöyle yapabiliriz;
+
+	reinterpret_cast<char*>(const_cast<int*>(&x));
+	  artık bu ifade int*
+
+	
+hatta şöyle bile yapabiliriz:
+
+
+	const_cast<char*>(reinterpret_cast<const char*>(&x));
+
+
+en iyi explicit dönüşüm hiç yapılmayan dönüşümdür. tabi ki belirli yerlerde explicit dönüşüm yapmak gerekiyor fakat onların dışında. ancak oralarda 
+çok daha dikkatli olmak gerekiyor.
+
+
+functional type cast
+____________________
+
+modern c++ ile gelmemiş daha önceden beri c++ da var, c de yok.
+
+	double dval = 7.232;
+
+	int(dval); // bu kod legal. normalde operand dval olmalı, int parantez içinde olmalı.
+
+dikkat. fonksiyonel biçim kullanıldığında bazı durumlarda birden fazla anahtar sözcük varsa o sentaks hatası oluşturur.
+
+	double dval = 6.234;
+	
+	auto x = long long(dval); // burada sentaks hatası. tür eş ismi kullanmak gerekebilir.	
+
+
+
+** Tür dönüştürme operatörleri modern c++ ile ilgili değil. ondan öncede bunlar vardı.
