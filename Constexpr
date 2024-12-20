@@ -1,0 +1,154 @@
+
+constexpr keyword
+_________________
+
+Modern C++' ın getirdiği bir anahtar sözcük. C' de yok C++ da var.
+Modern C++ da bu bir specifier.
+Modern C++ da anahtar sözcüklerinin kategorileri var.
+
+Dile ilk defa bir araç eklendiğinde ilk başlarda biraz kısıtlı olarak kullanım sunarlar. biraz da emniyet amaçlı. standartlar çıktıkça kısıtlar azalır.
+Bu araç da aynen böyle. 
+
+Derleme zamanında değeri compiler tarafından belli olan, garanti olan ifadeler diyebiliriz.
+
+C için konuşalım:
+
+	int foo();
+
+	const int x = 10;
+	const int y = foo();
+
+x // bu ifade bir constant expresion
+
+y // fakat bu ifade bir constant expression değil.
+
+
+aynı zamanda x ' in decltype' ı const int yukarda.
+
+
+	constexpr int x = 45; // x' in decltype ı nedir? constexpr değil çünkü constexpr bir type değil. -> cevap: yine const int
+
+aslında bu değişken constexpr const int x = 45; olarak tanımlanmış durumda.
+
+Peki bu şekilde neden değişken tanımlarız, böyle bir tanımlama ne ifade ediyor?
+-> eğer böyle bir değişken tanımlarsak bu ifadenin constant expression olma garantisi var.
+const için böyle bir garanti yoktu. yukarıda örneği var.
+
+yani artık x ona ne ile ilk değer verdiğimizden bağımsız olarak constant expression olarak kullanılma garantisi içeriyor.
+
+ve artık şöyle oluyor;
+
+	int foo();
+
+	constexpr int x = foo(); // hata
+
+çünkü derleyici compile time da artık bu x' e ilk değer veren ifadenin constant expression olup olmadığını sınamak/kontrol etmek zorunda.
+
+
+Artık elimizde isimlendirilmiş ve doğrudan derleyicinin bildiği gördüğü, dolayısıyla bir scope' u olan fakat aynı zamanda sabit ifadesi gereken yerde
+kullanılabilme garantisi olan bir değişkenimiz var. Adeta C de ki sembolik sabitler gibi kullanılabilirler.
+
+a) constexpr const' u zaten içerir, kendisi bir tür değil. sadece tanımlanan değişkenin sabit ifadesi gereken yerlerde kullanılabileceğini, 
+böyle bir garanti olduğunu gösteriyor. Oysa sadece const' un böyle bir garantisi yok. Dolayısıyla constexpr anahtar sözcüğü ile tanımladığımız değişkenlere
+ilk değer veren ifadelerin de sabit ifadesi olması gerekiyor.
+
+	int x = 45;
+	int y = 13;
+	
+	constexpr int* p = &x; // bildirim legal, constexpr const u da satın alıyor fakat o const böyle -> constexpr int* const p
+	dolayısıyla p const pointer to int
+	
+	p = &y; // p const pointer to int olduğu için bu ifade geçerli değil
+	*p = 11; // fakat bu geçerli çünkü low level const yok.
+
+	constexpr const int* p = &x; // şuan hem low level const hem de const pointer to int. şuan yukardaki iki ifade de geçerli değil.
+dk 1.24
+
+
+	constexpr int a[] = {1,2,3,4,5};
+
+	constexpr auto i1 = a[2];
+
+
+constexpr nin fonksiyonları nitelemesi
+______________________________________
+
+bir fonksiyonu constexpr niteleyicisi ile tanımlarsak "constexpr function" deniyor. Bu ne C de var ne de modern C++ da olan bir durum.
+Bu araç çok önemli ve dili boost eden bir araç.
+
+constexpr int func(int x)
+{
+	return x * x + 5;
+}
+
+bu bir constexpr function' dur.
+
+Nedir bu constexpr function?
+____________________________
+C++ 11  ile dile geldi ve çok kısıtlamalara sahipti, bugüne göre gülünç kısıtlamalar. Hatta one liner olmak zorundaydı.
+Fakat günümüzde hele hele 23 std ile birlikte neredeyse hiçbir kısıtlama kalmadı, normal bir fonksiyon için neler yapabiliyorsak bunlarda da yapabiliyoruz
+fakat neredeyse (almost).
+Kısıtlamalardan biri literal type ile ilgili. Bir constexpr fonksiyonunda fonksiyonun parametre değişkeni ya da değişkenleri, fonksiyonun geri dönüş değeri
+türü, fonksiyonun içinde tanımlanan yerel değişkenler "literal type" olmak zorunda. Aynı şekilde fonksiyon içinde statik ömürlü yerel değişken kullanamayız
+gibi kısıtlamalar var fakat bunlar çok çok azaldı.
+
+* constexpr fonksiyonuna gönderilen argümanlar const olmak zorunda değil.
+* Fonksiyonun constexpr olması şöyle bir garanti içerir;
+* Kural diyor ki eğer constexpr bir fonksiyona yapılan çağrı ifadesinde tüm argümanlar sabit ifadesiyse ve fonksiyon çağrı ifadesine constant expression
+gereken bir bağlamda kullanırsan, bu durumda çağrılan fonksiyonun geri dönüş değeri compile time ' da elde edilmek zorunda runtime da değil.
+
+	constexpr int func(int x)
+	{
+	    return x * x + 5;
+	}
+
+	int i= 45;
+
+	int a[func(12)]; // sanki böyle tanımlanmış gibi ==> int a[149]
+
+	
+* Çok yanlış anlaşılan tipik bir noktaya dikkat edelim, bu mecburiyet constexpr fonksiyona yapılan çağrının constant expression gereken yerde kullanılması
+durumunda böyle bir garanti var.
+
+* Özetle eğer constant expression kullanılmasının söz konusu olduğu bir yerde constexpr fonksiyonun parametrelerine constant expression göndererek çağrı
+yapılırsa compile time' da hesaplanmak zorunda. Bu önemli bir garanti. Özellikle generic programlama paradigmasında çok önemli bir hale geliyor.
+
+* constexpr fonksiyonlar implicity inline' dır. Bu da şu demek, bu fonksiyon inline olduğu için başlık dosyasına tanımını koyabiliriz. ODR çiğnenmez.
+
+* bazı değerlerin compile time' da hesaplanması verimi de arttırıyor. Öyle yerler var ki constexpr fonksiyonları kullanarak, kullanmasak runtime da hesaplanacak
+bazı değerlerin doğrudan derleme zamanında hesaplanması, runtime de yapılacak olan gereksiz işlemlerin yapılmaması demek.
+
+* NOT : Sabit ifadesi ile çağırmak mecburi değil, yukardaki durumda ki gibi kullanmak için çağırabiliriz.
+
+örn:
+	constexpr bool isprime(int x)
+	{
+	//...
+	if(//..)
+            return true;
+
+	return false;
+	
+	}
+
+int main(){
+
+	int x = 10;
+
+	auto b = isprime(x); // burada bir hata yok.
+
+	constexpr auto b = isprime(x); // bu ifade constexpr değil, o yüzden hata var. eğer gönderdiğimiz argüman constexpr olsa o zaman sentaks hatası olmaz.
+
+}
+
+
+constexpr ÖZET
+______________
+
+* Bir specifier' dır. Bir fonksiyonu veya bir değişkeni niteliyor. 
+* Bir fonksiyonu nitelediğinde böyle fonksiyonlara "constexpr function" diyoruz.
+* Kullandığımız standardın ne olduğuna bağlı olarak giderek azalan kısıtlamalar var.
+* constexpr bir fonksiyonun tüm parametrelerine contstant expression lar ile çağrı yaparsak, fonksiyon çağrısını sabit ifadesi gereken bir bağlamda
+kullanırsak artık fonksiyon çağrısından elde edilen değer compile time da hesaplanmak zorunda. Özellikle generic programlama paradigması için
+büyük önem taşır.
+
