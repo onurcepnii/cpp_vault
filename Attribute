@@ -1,0 +1,43 @@
+
+Attribute (Öznitelik)
+_________
+Modern C++' da dile eklenen ve her yeni standartla sayısı arttırılan araç seti.
+Özel bir sentaks ile oluşturulan yapılar.
+Attribute' lar ne olduklarına bağlı olarak, bazı yerlerde derleyiciyi uyarı mesajı teşvik ediyor. Bazı yerlerde tam tersi derleyicinin uyarı
+mesajı vermesini engelliyor.
+Bazı Attribute' lar derleyiciye kodla ilgili bilgi verip, derleyicinin daha etkin bir kod oluşturmasını sağlıyor. Yani daha etkin bir kod oluşturmasını
+sağlıyor.
+
+C++ 11 de eklendi fakat diğer standartlarda hep yeni attribute' lar eklendi.
+
+
+	[[nodiscard]]
+
+
+Örneğin;
+
+	int func(int);
+
+	int main(){
+	
+	func(12); // to discard the return value
+	
+	}
+
+
+
+
+Pure function' larda (yani fonksiyonun geri dönüş değeri zaten fonksiyonun varlık nedeni ise) fonksiyonun geri dönüş değerini kullanmazsak 
+lojik hata olur ancak derleyiciden hata mesajı almayız.
+ 
+Örneğin;
+	bool isPrime(int); 
+	
+	diye bir fonksiyonumuz olsun. Bu fonksiyon geri dönüş değeri olarak aldığı argümanın asal olup olmadığını döndürüyor.
+	
+	Bu fonksiyonun geri dönüş değerini kullanmasak lojik olarak hata olur, çünkü o zaman neden çağırdık? Fakat sadece lojik hata olduğu
+	için derleyici bize hata mesajı vermez.
+	
+	Bizde bu durumda [[nodiscard]] attribute' unu kullanabiliriz. Derleyiciye demiş oluruz ki ;
+	-Ben bu fonksiyona çağrı yaptığımda eğer bu fonksiyonun geri dönüş değerini kullanmazsam bana uyarı mesajı ver.
+	Derleyiciyi buna teşvik etmiş oluyor yani.
