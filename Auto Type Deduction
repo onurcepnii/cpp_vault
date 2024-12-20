@@ -1,3 +1,20 @@
+ÖZET
+
+ (1) auto x = expr;    İfadelerinde tür çıkarımı ilk değer veren ifadenin türüne göre yapılır.  
+		     	Tür çıkarımı yapılan ifadede constluk varsa eğer düşer. Fakat bu constluğun nesneye ait olması yani top-level constluk olması gerekir. 
+		    	Eğer low-level constluk varsa bu durumda constluk düşmez.
+		    	Array Decay, Function Decay uygulanır.
+
+ (2) auto &x = expr;	Tür çıkarım yine aynı şekilde yapılır fakat constluk düşmez.
+			 Array Decay ve Function Decay uygulanmaz.
+
+ (3) auto &&x = expr;	Burada hem x için hem auto keyword için ayrı ayrı 2 çıkarım yapılır sonra referans collapsing kurallarına göre işlem yapılır.
+			
+			İlk değer veren ifadenin value cat. L-value ise x l-value referansı(&) olacak.
+			İlk değer veren ifadenin value cat. R-value ise x r-value referansı(&&) olacak.
+			
+			İlk değer veren ifadenin value cat. L-value ise auto T&
+			İlk değer veren ifadenin value cat. R-value ise auto T
 
 
 ____________________________________
