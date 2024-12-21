@@ -1,0 +1,525 @@
+
+
+dynamic_cast Operatörü
+----------------------
+
+Her ne kadar up-casting için de legal olarak kullanılsa da, down-casting dönüşümün güvenli bir şekilde yapılıp yapılamayacağını
+gösteren operatör. Diğer tür dönüştürme operatörüyle sentaksı aynı.
+
+	dynamic_cast<target type>(expr)
+
+dynamic_cast operatörü pointer semantiği ile yani hedef türün bir pointer türü, operand olan ifadenin bir pointer türü 
+olması ile. ya da  referans semantiği ile yani hedef türün bir referans türü, operandın da bir l value expr. olması
+şeklinde kullanılabiliyor. bir başka kullanım biçimi de hedef türün void* olması.
+
+hedef tür:
+-pointer
+-referans
+-void ptr
+
+
+	class Base {
+
+	};
+
+	class Der : public Base {
+
+	};
+
+	int main()
+	{
+		Der myder;
+
+		Base* baseptr = &myder;
+
+		dynamic_cast<Der*>(baseptr); // sentaks hatası, çünkü bir constraint var. operand olan türün polimorfik olması gerekiyor.
+
+	}
+
+
+////////////////////
+
+
+	class Base {
+	public:
+		virtual ~Base();	// artık polimorfik sınıf. virtual int foo(); filan da yazsak yine polimorfik sınıf olur.
+
+	};
+
+	class Der : public Base {
+
+	};
+
+	int main()
+	{
+		Der myder;
+
+		Base* baseptr = &myder;
+
+		auto p = dynamic_cast<Der*>(baseptr);	// artık sentaks hatası yok, çünkü polimorfik sınıf
+	  //Der*									
+	}
+
+
+--------------------------------------------
+
+Operatörün ürettiği değer:
+
+	Hedef tür pointer türü ise down-casting başarılı olursa o zaman hedef türden adres elde ederiz.
+
+	Eğer dönüşüm başarılı olmazsa, örneğin Der sınıfından bir nesneyi değil de başka bir sınıf türünden nesneyi gösteriyor ise
+	o zaman down-casting başarısız olacak ve null pointer değeri üretilecek.
+
+
+	int main()
+	{
+		Der myder;
+		Base* baseptr = &myder;
+
+		if(Der* der_ptr = dynamic_cast<Der*>(baseptr)) {	// bu şekilde yaparak da scope leakage engellemiş oluruz.bu modern 
+																not: c++ ile gelmedi zaten vardı.
+			// programın akışı buraya girerse anlıyoruz ki Der nesnesi
+			der_ptr->foo();	// artık eminiz, güvenle bu çağrıyı yapabiliyoruz.
+		}
+
+		if(Der* der_ptr = dynamic_cast<Der*>(baseptr); derptr != nullptr;) // bu if with initializer, C++17 ile dile eklendi.
+
+	}
+
+
+----------------------------------------------------
+
+
+	class A {
+		
+	};
+
+	class B  {
+		
+	};
+
+	int main()
+	{
+		A* ptr = new A;
+
+		static_cast<B*>(ptr);	// sentaks hatası
+	}	
+
+
+AMA eğer bunlar aynı hiyerarşi içerisindeyse static_cast ile yapılan dönüşüm geçerli.
+
+
+	class A {
+		
+	};
+
+	class B : public A {
+		
+	};
+
+	int main()
+	{
+		A* ptr = new A;
+
+		static_cast<B*>(ptr);
+	}	
+
+
+Fakat bu runtime'a yönelik bir saptama değil. Derleme zamanında legal ama, gerçekten runtime da operand olan pointer hedef
+türden bir nesneyi gösteriyor mu sorusunun cevabını vermiyor;
+
+	class A {
+		
+	};
+
+	class B : public A {};
+
+	class C : public A{};
+
+	int main()
+	{
+		B bx;
+
+		A* ptr = &bx;
+		C* cptr = static_cast<C*>(ptr); // kodun legal olması ptr'nin gösterdiği nesnenin bir C nesnesi olduğunun garantisi mi?
+										// - hayır.
+	}	
+
+Yani static_cast operatörü ile yaptığımız dönüşümün derleme zamanında geçerli olması(aynı sınıf hiyerarşisi içindeki sınıflar 
+arasında) bu legal ama gerçekten runtime'da operand olan pointer hedef türden bir nesneyi gösteriyor mu sorusunun cevabını 
+vermiyor.
+
+Bazı kodlarda böyle bir dönüşüm gerektiği için legalite sağlanıyor.
+
+Dynamic cast operatörünü kullanarak yapsaydık buradaki sınama runtime'da yapılacaktı.
+
+
+-----------------------
+
+#include "car.h"
+
+	// diğer araba sınıflarında olmayan, sadece volvo'da olan open_sunroof() fonksiyonu var.
+
+int main()
+{
+	for (int i = 0; i < 1000; ++i) {
+		Car* carptr = create_random_car();
+		std::cout << *carptr << '\n';
+
+		Volvo* vptr = static_cast<Volvo*>(carptr); // #
+		vptr->open_sunroof();
+
+		delete carptr;
+	}
+}
+
+
+bu kod legal ama bu kod doğru değil. programın akışı # noktasına geldiğinde bu nesne gerçekten Volvo değilse yani örneğin Fiat
+ise bu noktada tanımsız davranış olacak, runtime error olacak.
+
+
+////////////////////////
+
+Gerçekten Volvo olduğundan eminsem onun sunroof'unu açacaksam, o zaman down-casting'in güvenli bir şekilde yapılıp 
+yapılamayacağını sınamak için seçeneklerimden biri dynamic_cast operatörünü kullanmak.
+
+#include "car.h"
+
+	// diğer araba sınıflarında olmayan, sadece volvo'da olan open_sunroof() fonksiyonu var.
+
+int main()
+{
+	for (int i = 0; i < 1000; ++i) {
+		Car* carptr = create_random_car();
+		std::cout << *carptr << '\n';
+
+		if(Volo* vp = dynamic_cast<Volvo*>(carptr)) { // yanlış ise nullptr döndürür ve if bloğuna girmez. auto vp = .. de 	
+														 yazabiliriz
+			vp->open_sunroof();
+		}
+
+		delete carptr;
+	}
+}
+
+Virtual Dispatch'de olduğu gibi bunun da bir runtime maliyeti var tabiki.
+
+VolvoXC90'ı gösteriyorsa dynamic_cast nullptr mi üretecek? - hayır, yine down-casting başarılı olacak.
+
+
+
+Dynamic_cast'de hedef türü referans türü olarak da seçebiliriz fakat işlemin başarısız olması sonucu null referans diye birşey 
+yok. yani nullptr döndürmüyor çünkü pointer değil referans hedef tür. fakat null ref. diye birşey de yok. Burada o yüzden
+exception throw ediyor. Burada throw edilen exception'un türü 
+
+	int main()
+	{
+		for(int i = 0; i < 100; ++i) {
+			Car* carptr = create_random_car();
+			std::cout << *carptr << '\n';
+
+			try {
+				Volvo& vr = dynamic_cast<Volvo&>(*carptr);
+				vr.open_sunroof();
+			}
+
+			catch(const std::bad_cast& e) {		// catch(const std::exception& ex) ikisiyle de yakalayabiliriz.
+				std::cout << "exception caught : " << ex.what() << '\n';
+			}
+		}
+	}
+
+
+------------------------------------
+
+
+3 çeşit casting var:
+
+Up-Cast
+Down-Cast
+Side-Cast
+
+
+	class Base {
+		virtual void foo() {}
+	};
+
+	class Xder : public virtual Base {};
+
+	class Yder : public virtual Base {};
+
+	class Mder : public Xder, public Yder {};
+
+	int main()
+	{
+		Mder mder;
+
+		Xder& dx = mder;
+
+		[[maybe_unused]]
+		Mder& r_mder = dynamic_cast<Mder&>(dx);	//downcast
+
+		[[maybe_unused]]
+		Yder& ry = dynamic_cast<Yder&>(dx);	// sidecast
+
+
+	}
+
+Aslında dynamic_cast ile upcasting de yapabiliyoruz fakat o dönüşüm zaten örtülü olarak yapılıyor. down casting ve side casting
+örtülü olarak yapılmadığı için kullanıyoruz.
+
+Bir de void* türüne yapılan casting var.
+
+	class Base {
+	public:
+		virtual void foo();
+	};
+
+	class Der : public Base {};
+
+	class Erg : public Der {};
+
+	int main()
+	{
+		Base* ptr = new Erg; // Erg nesnesinin adresi ile Base nesnesinin adresi aynı değil mi? -Aynı olmak zorunda değil.
+		// yani. baseptr'nin Erg'i göstermesi demek aslında baseptr'nin değerinin fiziksel olarak erg nesnesinin adresi
+		olması demek değil. erg'in içindeki base'in adresini tutuyor.
+
+		void* vptr = dynamic_cast<void*>(ptr);	// doğrudan Erg nesnesinin adresini elde etmiş olduk
+	}
+
+
+
+
+----------------
+
+typeid Operatörü
+
+----------------
+Bu operatörü kullanabilmek için typeinfo başlık dosyasını include etmemiz lazım.
+
+Nasıl sizeof operatörünün operandı bir tür veya bir ifade olabiliyor ve 2 şekilde kullanılabiliyorsa (sizeof(10); sizeof(int))
+typeid operatörünün operandı için de bu geçerli.
+
+	typeid(10) veya typeid(int)
+
+
+typeid operatörünün dynamic cast operatöründen birinci farkı, operandı olan ifadenin ya da türün polimorfik tür olma mecburiyeti
+yok.
+
+typeid operatörü ile oluşturulan ifade aslında bir const l value referans. Peki hani türe const l value referans? 
+- std::type_info isimli sınıfı türünden bir referans. Yani typeid operatörü ile oluşturulan bir ifadeyi bir değişkene
+bağlamak istersem;
+
+	const std::type_info&r r = typeid(10);
+
+	auto & r = typeid(10);
+
+
+type_info sınıfı ilgin bir sınıf çünkü bu sınıftan bir nesne oluşturmanın tek yolu typeid operatörünü kullanmak.
+
+	int main()
+	{
+		using namespace std;
+
+		type_info x;	// sentaks hatası çünkü sınıfın default ctor'u yok.
+
+		type_info x = typeid(int);	// sentaks hatası, copy member'lar delete edilmiş durumda. onlar delete edilmiş olduğu için
+									   dolayısıyla move member'lar da yok
+
+	}
+
+
+Kala kala typeid operatörü kaldı o halde.
+
+typeid'nin bizi ilgilendiren 2 tane önemli member fonksiyonu var.  operator == ve operator !=
+
+	class Myclass {
+
+	};
+
+	int main()
+	{
+		using namespace std;
+
+		Myclass m;
+
+		typeid(m) == typeid(Myclass);
+		typeid(m) != typeid(Myclass);
+
+		//aynı türe ilişkin ise boolean true, farklı türlere ilişkinse boolean false değeri üretir.
+
+Sınıfın bir de name isimli bir fonksiyonu var.
+
+		typeid(Myclass).name();	//cstring döndürür. hangi tür olduğuna dair bir yazı döndürüyor. fakat bu yazı standard değil.
+								// derleyiciden derleyiciye değişiyor. yazı ==> class Myclass
+
+	}
+
+
+Ne işe yarayacak?
+-Eğer polimorfik bir tür söz konusu değilse, yani operand polimorfik değilse typeid operatörü ile eriştiğimiz typeinfo
+nesnesi dinamik türe değil, statik türe ilişkin. Yani örneğin şöyle bir kod yazsak;
+
+	class Base {};
+
+	class Der : public Base {
+
+	};
+
+	int main()
+	{
+		using namespace std;
+
+		Der myder;
+		Base* baseptr = &myder; // normalde şuanda baseptr nin gösterdiği nesne Der sınıfı türünden.
+
+		typeid(*baseptr).name();	// eğer burada polimorfik bir tür olsaydı, runtime'a ilişkin türe yönelik olacaktı. ama şuan
+									statik türe ilişkin. ekrana class base yazacak. oysa baseptr der nesnesini gösteiyor.
+	}
+
+
+Eğer sınıfı polimorfik hale getirip yine aynı kodları yazarsak bu sefer aynı kod "class Der" yazacak.
+
+typeid operatörünün dynamic_cast operatöründen birinci farkı - sadece polimorfik türler ile kullanılmak sınırı olmayışı.
+polimorfik olsun veya olmasın typeid operatörü ile kullanabiliriz.
+
+	int main(){
+
+		int x = 10;
+
+		auto& r = typeid(x);
+	}
+
+type_info nesnesini kullanmanın tek yolu typeid operatörü.
+
+
+
+bizi ilgilendiren üye fonksiyonları:
+
+	int main()
+	{
+		int x = 10;
+
+		typeid(x).operator==() // başka bir typeinfo nesnesi ile eşitliğe sokabiliriz, true veya false döner. polimorfik türe 
+		bir sınıfa ilişkin kullanılmıyorsa statik türü bize verir, eğer polimorfik sınıfa ilişkin kullanılırsa dinamik türü
+		bize verir.
+
+	}
+
+
+///////////////
+
+	class Base{};
+
+	class Der : public Base {};
+
+	int main()
+	{
+		Der myder;
+		Base* baseptr = &myder;
+
+		boolalpha(std::cout);
+
+		std::cout << (typeid(*baseptr) == typeid(Der)) << '\n';	// statik türe ilişkin bilgi verecek çünkü polimorfik değil.
+	}
+
+
+FAKAT
+
+
+	class Base{
+		virtual ~Base() = default;
+	};
+
+	class Der : public Base {};
+
+	int main()
+	{
+		Der myder;
+		Base* baseptr = &myder;
+
+		boolalpha(std::cout);
+
+		std::cout << (typeid(*baseptr) == typeid(Der)) << '\n';	// şuan polimorfik sınıf olduğu için dinamik türe ilişkin
+
+		typeid(*baseptr).name(); //derleyiciye bağlı olarak türe ilişkin bir yazı döndürür
+	}
+
+
+***
+ typeid operatörü unevaluated context oluşturur. işlem kodu üretilmez.
+
+ 	int x = 5;
+
+ 	std::cout << typeid(x++).name() << "\n";
+
+ 	std::cout << "x = " << x << '\n';
+
+
+
+----------------------------------
+
+	class Base{
+		virtual ~Base() = default;
+	};
+
+	class Der : public Base {};
+
+	int main()
+	{
+		Base* baseptr{};	// nulptr
+
+		try{
+			std::cout << typeid(*baseptr).name() << '\n';
+		}
+
+		catch (const std::exception& ex) {	// catch (const std::exception& ex)
+			std::cout << "exception caught: " << ex.what() << '\n';
+		}
+	}
+
+
+BUNU
+	UNUTMAYALIM
+nullptr'ı dereference etme ifadesi polimorfik sınıflar için bad_typeid sınıfı türünden bir exception gönderilmesine neden oluyor.
+
+
+-----------------------
+#include <typeinfo>
+#include <iostream>
+#include "car.h"
+
+	int main()
+	{
+		for(int i = 0; i < 1000; ++i) {
+			Car* carptr = create_random_car();
+			if(typeid(*carptr) == typeid(Volvo)) {	// bu bloğa girmesi zaten bu nesnenin Volvo olduğunun kanıtı
+				std::cout << *carptr << "\n";
+				Volvo* vptr = static_cast<Volvo*>(carptr);	// static cast yaparız çünkü zaten biliyoruz Volvo olduğunu
+				vptr->open_sunroof();
+				(void)getchar();
+			}
+		delete carptr;
+		}
+	}
+
+
+Derleyicilerde genelde RTTI switchleri olur. Kapatılıp açılabilir. Hatta çok eskiden genelde kapalıydı sonradan default olarak 
+açık haline getirildi.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
