@@ -1002,3 +1002,423 @@ ve hangi override olduğu bir şekilde belirleniyor ve fonksiyon çağrısı yap
 
 Derleyiciden derleyiciye değişebilir fakat örneğin Neco'nun derleyicisinde 
 
+Virtual Dispatch Mekanizması
+----------------------------
+
+Burada maliyet etkin. Bağlama göre karar vermemiz lazım, Kalıtım/Inheritence tek seçeneğimiz değil.
+
+
+	class Base {
+	public:
+		int x{};
+		int y{};
+	};
+
+	int main()
+	{
+		std::cout << "sizeof(Base) = " << sizeof(Base) << "\n";
+	}
+
+
+OUTPUT : sizeof(Base) = 8
+
+
+	class Base {
+	public:
+		int x{};
+		int y{};
+		void f1();
+		void f2();
+		void f3();
+	};
+
+	int main()
+	{
+		std::cout << "sizeof(Base) = " << sizeof(Base) << "\n";
+	}
+
+
+OUTPUT : sizeof(Base) = 8 // yani sınıf nesnesinin sizeof unda bir değişiklik yok
+
+
+	class Base {
+	public:
+		int x{};
+		int y{};
+		virtual void f1();
+		void f2();
+		void f3();
+	};
+
+	int main()
+	{
+		std::cout << "sizeof(Base) = " << sizeof(Base) << "\n";
+	}
+
+OUTPUT : sizeof(Base) = 12 // fonksiyonlardan birisi virtual olduktan sonra sizeof'da 4 byte lık bir artış oldu. Hatta diğer bütün
+						      fonksiyonları da virtual yapsak yine değer 12 olarak kalacak.
+
+
+Diyebiliriz ki aslında o 4 byte lık fark sınıfın polymorphic olup olmaması ile ilgili. Sınıf polymorphic olduktan sonra 4 byte lık
+bir artış oldu.
+
+
+	class Base {
+	public:
+		int x{};
+		int y{};
+		virtual void f1();
+	};
+
+	class Der : public Base { };
+
+	int main()
+	{
+		std::cout << "sizeof(Base) = " << sizeof(Base) << "\n";		// 12
+		std::cout << "sizeof(Der) = " << sizeof(Der) << "\n";		// 12
+	}
+	
+
+Şimdi gelelim sadede..
+
+Sınıf polymorphic hale gelince derleyici taban sınıf nesnesinin içine bir tane pointer gömüyor. Yani o 4 byte bir tane pointer
+elemana sahip olduğu için artıyor. Polymorphic sınıfların taban sınıflarının içinde bir tane pointer var.
+
+Bu pointerlara "Virtual Function Table Pointer" veya "Virtual Pointer" deniyor. Derleyicinin ürettiği kodla programın çalışma
+zamanında kalıtım hiyerarşisindeki her sınıf için run time da bir veri yapısı oluşturuluyor. Bu veri yapısına "Virtual Function 
+Table" deniyor.
+
+***
+	Her sınıf başına bir tane sanal fonksiyon tablosu var, her nesne başına değil.
+
+	Her sınıf nesnesinin içinde bir vptr(virtual function table pointer) var.
+
+
+
+carptr taban sınıf türünden bir pointer olsun.
+
+	carptr->run();
+
+	derleyici isim aramayı compile time da yapıyor. Tabi ki Car sınıfında arayacak. Böylece Car sınıfında bulduğu run isminin bir
+	virtual function'a ait olduğunu biliyor(compile time da). Derleyici run'ın sanal fonksiyon olduğunu anladığında bunun için 
+	compile time da bir indeks elde edebilir değil mi? -evet. Yani o tablodaki indeksi aslında compile time'da elde ediyor.
+	Yani örneğin start'ın indeksi 0, run'In indeksi 1, stop'un indeksi 2 gibi.. DOlayısıyla derleyici daha compile time'da elde
+	ettiği indeks ile sanal fonksiyon tablosunda kullanacağı indeksi elde etmiş oluyor. Peki bunu nasıl bir koda dönüştürüyor?
+	Semblik olarak;
+		carptr taban sınıf pointeri
+
+		carptr->vptr	bu adresten sanal fonksiyon tablosunun adresini elde ediyor. ve compile time'da elde ettiği indeksi 
+						kullanarak bu indeksteki fonksiyon adresine erişiyor. ve o adresteki fonksiyonu çağırıyor.
+
+		carptr->vptr[idx]()
+
+	derleyici aslında ürettiği kodla derleme zamanında hangi fonksiyonun çağırıldığını bilmiyor.
+
+maliyet(cost)
+=============
+işlemsel maliyet ( yapılan işlem sayısı olarak )
+kullanılan bellek alanı ( storage )
+
+İşlemsel maliyet
+----------------
+-2 tane ilave (additional) dereferencing var. -> taban sınıf nesnesinin içindeki vptr'a erişim, tablonun belirli indeksindeki 
+fonkisyon adresine erişim.
+
+-Sanal fonksiyon tabloları da runtime'da oluşturulacak, onun da bir maliyeti var ve bir kere ödenir.
+
+-her polimorfik nesne için vptr'ın initialize edilmesi
+
+***
+ Ayrıca derleyici virtual fonksiyonların hangi kodun çağırılacağını compile time'da bilemeyeceği için bazı optimizasyonları 
+ yapamaması olumsuz yönleri arasında sayabileceğimiz bir konu. 
+
+ Hatta bu normal fonksiyonlar için de geçerli. Örneğin bir 
+ fonksiyonu bir function pointer ile çağıralım bir de fonksiyonu ismi ile çağıralım, arada çok büyük bir fark var. Fonksiyonu
+ ismi ile çağırdığımız zaman yani hangi fonksiyonun çağırıldığını derleyici bildiği zaman, çağrılan fonksiyonun da derleyici
+ kodunu gördüğünde inline expansion yapabiliyor. Ama diyelim ki fptr bir fonksiyon pointer olsun, biz fptr'nin gösterdiği
+ fonksiyonu çağırırsak derleyici fptr'nin değerinin hangi fonksiyonun adresi olduğunu bilemeyeceğine göre (çok büyük çoğunlukla)
+ burada, çağırıldığı noktada çağırdığı fonksiyonun kodunu görmesi bilmesi söz konusu değil. Aslında en önemli optimizasyon
+ inline expansion kısmı. Yani derleyici eğer hangi fonksiyonun çağırıldığını bilseydi, fonk. çağrısının üstündeki kodlar ile altındaki kodları bir bütün olarak ele alıp burada ilave optimizasyonlar da yapabilecekti. 
+
+ //codes
+ fptr(2,4);
+ //codes
+
+*** 
+ Dikkat! Çok büyük çoğunlukla Virtual Dispatch dinamik ömürlü nesneleri gerektiriyor. Bu da dinamik ömürlü nesneler için 
+ yapılacak olan allocation - deallocation işlemlerinin maliyeti demek.
+
+-Her polimorfik nesne bir pointer büyüyor. ( bellek maliyeti )
+
+
+carptr->run();		| böyle bir fonksiyon çağrısı yaptığımızda aslında gerçekte olan: bu ptr'ın gösterdiği Car nesnesi içindeki
+					  sanal fonksiyon tablosundan önce vptr'ye eriş, sonra onun vasıtası ile sanal fonk. tablosundaki belirli
+					  bir indeksteki fonksiyon adresine eriş.
+
+
+RTTI
+----
+Runtime Time Information veya Runtime Time Identification kısaltması.
+
+Programın çalışma zamanında türün ne olduğunun belirlenmesi. 
+
+Örnek verecek olursak;
+	
+	void car_game(Car* p)
+	{
+		??		örneğin buraya gelecek olan arabanın bir mercedes olup olmadığını sınamamız gerekiyor. Yani nesnenin dinamik
+				türünü anlamamız gerekiyor. Yoksa *p statik tür olarak baktığımız zaman, yani derleyicinin yaptığı kontrollere
+				konu tür olarak baktığımız zaman bu Car türünden bir nesne. Ama davranışı esas tür olarak baktığımızda yani
+				eğer Car polimorfik bir sınıfsa *p runtime'da Dacia da olabilir Renault da olabilir.
+	}
+
+00.34
+
+Peki buraya gelen nesnenin runtime'da Mercedes olup olmadığı nasıl anlaşılıyor? Bunu anlamanın yolu ile Virtual Dispatch 
+mekanizmasının yolu aynı. Yine sanal fonksiyon tablosundan faydalanılıyor.
+
+Özetle RTTI'da sanal fonksiyon tablosunu kullanıyor.
+
+
+
+
+
+
+Variant Return Type / ya da / Covariance
+----------------------------------------
+Normalde virtual function'larda override işlemi yapmak için imzası aynı, geri dönüş değeri türü aynı ve parametreleri aynı
+olması gerekir. Eğer geri dönüş değeri türü farklı, parametreleri ve imzası aynı olursa bu sentaks hatası olur.
+
+Fakat bir istisna var demiştik.. İşte o istisna Covariance.
+
+
+Türemiş sınıfın, sanal sınıfın virtual fonksiyonunu override etmesine rağmen taban sınıfın sanal fonksiyonunun geri dönüş 
+değeri türünü farklı yapabilmesi seçeneğine ilişkin bir istisna.
+
+
+	class B {};
+	class D : public B {};
+
+	class Base {
+	public:
+		virtual B* foo();
+		virtual B& bar();
+	};
+
+	class Der : public Base {
+	public:
+		D* foo()override;		// B* yerine B'nin child class'ı olan(public inheritence yoluyla elde edilmiş) D sınıfı türünden 							adres döndürebilir. Çünkü her D bir B olduğuna göre 
+		D& bar()override;		// bu da aynı şekilde.
+	};
+
+
+***
+	Yalnız birşeye dikkat. Bunun olması için fonksiyonun geri dönüş değerinin ptr veya ref olması gerekiyor. Örneğin şöyle bir
+	fonksiyon daha olsaydı;
+
+		..
+		virtual B bom();	// ptr veya ref semantiği yok. covariant olmaz
+
+
+
+*** Hatırlayalım ***
+--------------------
+	Hatta bunu bir önceki derste gördük aslında. Virtual Constructor Idiom'unda.
+
+	class Car {
+		virtual void start();
+		...
+		virtual Car* clone() = 0;
+	};
+
+	class Mercedes : public Car {	
+	public:
+		Mercedes* clonde()override  // aslında burada covariant var. return value Car* değil, Mercedes*
+		{
+			return new Mercedes(*this);
+		}
+	};
+
+--------------------
+
+
+	class B {};
+	class D : public B {};
+
+	class Base {
+	public:
+		virtual B* foo();
+		virtual B& bar();
+	};
+
+	class Der : public Base {
+	public:
+		B* foo()override;
+		{
+			return new D;
+		}
+
+		B& bar()override;
+	};
+
+	int main()
+	{
+		Der myder;
+		D* dp = myder.foo();	// D nesnesi döndürmesine rağmen sentaks hatası. static cast yapmamız lazım
+
+		D* dp = static_cast<D*>(myder.foo());
+
+	}
+
+
+Başka bir örnek;
+
+	#include "car.h"
+
+	int main()
+	{
+		Renault r;
+
+		///
+
+		r.clone(); // Renault* döndürür.
+				   /// Covariant kullanılmasaydı ve Car* döndürülseydi;
+
+		Renault* rp = r.clone(); // sentaks hatası olurdu.. bunu legal kılmak için tür dönüştürme op. kullanmamız gerekirdi.
+
+		Fakat şimdi diyoruz ki Renault'un clone'u Renault döndürüyor, gereksiz tür dönüşümlerini böylece Covariant ile 
+		elimine etmiş oluyoruz.
+
+	}
+
+
+
+------------------------------------------------
+
+
+
+
+	class Car {
+	public:
+		virtual void start(){ std::cout << "Car::start()\n"; }
+		virtual void run(){	std::cout << "Car::run()\n";     } 
+		virtual void stop(){ std::cout << "Car::stop()\n";   }
+		virtual Car* clone() = 0;
+	};
+
+	class Volvo : public Car {
+	public:
+		void start() { std::cout << "Volvo::start"}
+		void run() { std::cout << "Volvo::run"}
+		void stop() { std::cout << "Volvo::stop"}
+		Volvo* clone()override
+		{
+			return new Volvo(*this);
+		}
+
+	};
+
+	class Renault : public Car {
+	public:
+		void start() { std::cout << "Renault::start"}
+		void run() { std::cout << "Renault::run"}
+		void stop() { std::cout << "Renault::stop"}
+		Renault* clone()override
+		{
+			return new Renault(*this);
+		}
+
+	};
+
+	class Mercedes : public Car {
+	public:
+		void start() { std::cout << "Mercedes::start"}
+		void run() { std::cout << "Mercedes::run"}
+		void stop() { std::cout << "Mercedes::stop"}
+		Mercedes* clone()override
+		{
+			return new Mercedes(*this);
+		}
+
+	};
+
+	class VolvoXC90 : public Volvo {	// multiple inheritence
+	public:
+		VolvoXC90* clone()override
+		{
+			return new VolvoXC90(*this);
+		}
+
+		void start()
+		{	
+			std::cout << "VolvoXC90::start()\n";
+		}
+
+		void run()override
+		{
+			std::cout << "VolvoXC90::run()\n";
+		}
+
+		void stop()override
+		{
+			std::cout << "VolvoXC90::stop()\n";
+		}
+
+	};
+
+	void car_game(Car* p)
+	{
+		p->start();
+		p->run();
+		p->stop();
+		(void)getchar();
+	}
+
+	VolvoXC90 nesnesi oluşturduğumuzda;
+
+		VolvoXC90::start()
+		VolvoXC90::run()
+		VolvoXC90::stop()
+
+		ekrana yazar.
+
+
+Ancak şimdi şöyle yapalım: VolvoXC90 fonksiyonlardan birini override etmesin;
+
+
+	class VolvoXC90 : public Volvo {	
+	public:
+		VolvoXC90* clone()override
+		{
+			return new VolvoXC90(*this);
+		}
+
+		void start()
+		{	
+			std::cout << "VolvoXC90::start()\n";
+		}
+
+		void run()override
+		{
+			std::cout << "VolvoXC90::run()\n";
+		}
+
+		//void stop()override
+		//{
+		//  	std::cout << "VolvoXC90::stop()\n";	| bu fonksiyonu yorum satırına aldık
+		//}
+
+	};
+
+Şimdi tekrar deneyelim;
+
+	VolvoXC90::start()
+	VolvoXC90::run()
+	Volvo::stop()
+
+***
+	Yani eğer türemiş sınıf, taban sınıfın sanal fonksiyonunu override etmezse burada taban sınıfınki çağırılıyor.
+	Bu da aslında implementasyon tarafında ne demek? -VolvoXC90'ın sanal fonksiyon tablosunda o indeksinde normalde
+	override etseydi VolvoXC90'ın stop fonksiyonunun adresi olacaktı ama orada taban sınıfın stop fonksiyonunun adresi var.
+
+
