@@ -1,0 +1,434 @@
+class Nec{
+	public:
+		class Nested{
+			//..
+		};
+
+		enum Pos {On,Off}; // enum class yani scoped enum da olabilir.
+
+		using Dollar = double.
+	};
+
+Eğer bunlar global namespace'de bildirilirlerse scopeları namespace scope olur. Oysa şimdi class scope.
+
+Class scope'da oldukları için sınıf ismiyle niteleyerek kullanmamız gerekiyor.
+
+	int main()
+	{
+		Nec::Nested x;
+		Nec::Pos mypos;
+		auto x = Nec::Off;
+	}
+
+
+Nec sınıfına enclosing class denir. Peki enclosing class nested class'ın private bölümüne erişebilir mi? -Hayır.
+Ancak friend class bildirimi yapabiliriz.
+
+	class Nec{
+	public:
+		class Nested{
+		private:
+			void foo();
+			int mx;
+			friend Nec;
+		};
+	};
+
+Nested Class, Enclosing Class'ın private bölümüne erişebilir.
+
+
+
+
+
+
+***
+ Üye fonksiyonun içinde kullandığımız isim arama kurallarıyla, bir ismi sınıfın içinde kullanmanız durumunda isim arama kuralları
+birbirinden farklı.
+
+	class Nec{
+
+		Nested mx;		// sentaks hatası oluşturur. Çünkü isim arama kurallarına göre Nec class'ının başından Nested mx; 
+		class Nested{	// satırına kadar aranacak ve bulamayacak çünkü class def. altta kaldı.
+
+		};
+	};
+
+Fakat
+
+	class Nec{
+
+		class Nested{
+
+		};
+
+		Nested mx;		// şuan sıkıntı yok örneğin
+	};
+
+
+
+
+
+
+
+***
+Örneğin aşağıdaki kodda Word wx; ifadesi yukardaki Word struct türünden mi yoksa using Word = int; türünden mi?
+-Cevap: yukarıdaki sınıf türünden.
+
+	struct Word {
+		short low_byte;
+		short high_byte;
+	};
+
+	class Nec{
+
+		Word wx;
+
+		using Word = int;
+	};
+
+
+
+
+
+***
+
+	class Nec{
+
+		void foo()	// inline function definition, sınıfın dışında tanımlanmış gibi aynı kurallara tabi.
+		{
+			wx = 6; // legal
+		}
+
+		using Word = int;
+		Word wx;
+	};
+
+
+
+***
+
+	Struct Data {
+		//...
+		int get()const;
+	};
+
+	class Nec{
+		Data mydata;		// Struct Data
+		void foo();
+		using Data = int;
+		Data mval{};		// int
+	};
+
+	void Nec::foo()
+	{
+		mdata = 5;				// invalid
+		mval = 5;				// valid
+		auto x = mdata.get();	// valid
+		auto y = mval.get();	// invalid
+	}
+
+
+
+
+
+
+
+***
+
+	class Myclass{
+	private:
+		class Nested{
+
+		};
+
+	public:
+		static Nested create_nested();
+	};
+
+
+	int main()
+	{
+		Myclass::Nested nx;									// illegal, private
+
+		Myclass::Nested nx = Myclass::create_nested();		// illegal, aynı problem devam ediyor
+
+		auto nx = Myclass::create_nested();					// legal
+	}
+
+Not: Erişim kontrolü ortada eğer bir isim varsa uygulanıyor. Yani Myclass::Nested yazdığımızda aldığımız hata erişim kontrolünden
+dolayı. Fakat eğer son satırda olduğu gibi yazmazsak erişim kontrolü hatası almayız. İlginç.
+
+
+
+
+
+***
+
+	int x, y;	// globals
+
+	class enclose{
+		// note: private members
+		int x;
+		static int s;
+	public:
+		struct inner { // nested class
+			void f(int i)
+			{
+				x = i;	// Error: can't write to non-static enclose::x without instance
+				int a = sizeof x;	// Error until C++11
+				// OK in C++11: operand of sizeof is unevaluated,
+				// this use of non-static enclose::x is allowed.
+				s = i;	// OK: can assign to the static enclose::s
+				::x = i;// OK can assign to global x
+				y = i;	// OK can assign to global y
+			}
+
+			void g(enclose* p, int i)
+			{
+				p->x = i;	// OK: assign to enclose::x
+			}
+		};
+	};
+
+
+
+
+***
+	class Enc {
+
+		class Nested {
+			void foo(int);
+		};
+
+		void Nested::foo(int) // burada tanımlayamayız geçerli değil, fakat fonksiyonu namespace içinde tanımlayabiliriz
+		{
+
+		}
+	};
+
+	void Enc::Nested::foo(int) // legal
+	{
+
+	}
+
+	//////////////
+
+	void Enc::Nested::foo(Nested x) // Parantez içinde de sentaks hatası yok, böyle kullanabiliyoruz
+	{
+		Nested y = x;	// class scope sayılır, sentaks hatası yok
+	}
+
+	Kritik yer***
+
+	Nested Enc::Nested::foo(Nested x)	// Şuan sentaks hatası, çünkü geri dönüş değeri türünün yazıldığı yer class scope
+	{									// değildir. Sık yapılan hata, dikkat edelim. Enc::Nested yazmalıyız.
+		return x;
+	}
+
+
+
+
+***
+	Forward declaration yaptığımız yer arasında fark olur mu? -Evet.
+
+	class Myclass{
+
+		class Nec;		// bu bir nested class'ın forward declaration'u
+	}				
+
+
+	ile
+
+
+	class Nec;	// bu namespace'de ki bir tür için forward declaration
+
+	class Myclass{
+
+	};
+
+
+	bunlar farklı.
+
+
+Pimpl Idiom	(Pointer Implemenation'dan uydurma bir sözcük)
+----------------------------------------------------------
+Sınıfın private bölümünü gizlemek.
+
+Bazı kodların değişmesi durumunda, bizim daha önceden yazılmış kodlarımızın artık doğru olmaması. Yani onları değiştiriyorsak
+bizim de bazı değişiklikler yapmamız veya re-compile yapmamız gerekiyor diyelim.
+
+	//nec.h
+
+	class Nec{
+
+	private:
+		struct pimpl;	// in-complete nested type
+		pimple* mp;		// std::unique_ptr<pimpl> uptr;  bu yeni implementasyon
+	};
+
+	//nec.cpp
+
+	struct Nec::pimpl {
+		A ax;
+		B bx;
+		C cx;
+	}
+
+Sınıfın ctor'u veya ctor'ları pimpl pointerini dinamik ömürlü bir pimpl nesnesi ile initialize edecek. Yani nec'in ctor'u
+aslında dinamik ömürlü bir pimpl nesnesi oluşturacak, dolayısıyla dinamik ömürlü pimpl nesnesinin elemanları aslında nec 
+sınıfının elemanları gibi kullanılacak. Tabii ki bunun da bir maliyeti var.
+
+Not: bu eski implementasyon.
+
+
+
+
+
+____________________________
+
+		Composition
+____________________________
+
+Nesne yönelimli programlamada sınıflar arasındaki ilişkiyi betimleyen bazı terimler var.
+
+	Association
+	-----------
+	Bir sınıfın birlikte bir işi görmesi. Yani o işin yapılması için o iki sınıfın birlikte olması gerekiyor.
+
+		Aggregation
+		-----------
+		Association'un özel bir biçimi. İki sınıf nesnesi birlikte işini görüyor fakat sınıflardan birisi diğerin sahibi
+		konumunda. Örneğin arabanın motoru var, bilgisayarın anakartı var gibi.
+		
+			Composition (has-a-relationship)
+			-----------
+			Aggregation'un bir alt kategorisi. Aggregation'un Composition haline gelmesi için, sahip olan nesne ile(owner)
+			sahip olunan nesne arasında ömürsel bir birliktelik olması gerekiyor. Mesela, insan ve insan beyni arasındaki ilişki.
+			Doğduğumuzda beynimiz ile doğuyoruz, ölürken beynimiz ile ölüyoruz.(Beyin nakli yok.)
+
+
+
+
+Her composition bir aggregation, her aggregation bir association.
+
+
+Örneğin aşağıda her Car nesnesi hayata geldiğinde onun Engine türünden m_eng veri elemanı da hayata gelecek. Car için dtor 
+çağırıldığında Engine için de çağırılacak.
+
+	class Engine {
+
+	};
+
+	class Car {
+
+	private:
+		Engine m_eng;
+	};
+
+Buna containment (içerme) denir. Bir nesnenin elemanının başka bir sınıf türünden nesne olması.
+
+
+Copy ve move ctor yazarken eksik yazarsak elemanlar default ctor edilir.
+
+	class Myclass{
+	public:
+		Myclass(Myclass&& other)	// initializer list kulanmadık boş bıraktık
+		{
+
+		}
+		Myclass(Myclass&& other)	// initializer list kulanmadık boş bıraktık
+		{
+
+		}
+	};
+
+...
+
+Eğer copy ctor ve move ctor'u kendimiz yazıyorsak elemanların da copy veya move edilmesinden biz sorumlu oluruz. Aslında böyle
+yazmamız lazım;
+
+	Myclass(const Myclass& other) : ax(other.ax), bx(other.bx), cx(other.cx)
+	{
+		...
+	}
+
+Assignment'lar için de aynı şey söz konusu, yine biz sorumluyuz.
+
+
+
+Örnek:
+
+	class Member {
+	public:
+		Member& operator=(const Member&)
+		{
+			std::cout << "Member copy assignment\n";
+			return *this;
+		}
+
+	};
+
+
+	class Owner {
+		Member mx;
+	};
+
+	int main()
+	{
+		Owner x, y;
+
+		x = y;
+	}
+
+
+Burada member copy assignment çağırılır. Fakat owner'in copy assignmentini derleyici yazdı. Eğer biz yazarsak;
+
+
+	class Member {
+	public:
+		Member& operator=(const Member&)
+		{
+			std::cout << "Member copy assignment\n";
+			return *this;
+		}
+
+	};
+
+
+	class Owner {
+		Member mx;
+	public:
+		Owner& operator=(const Owner& other)
+		{
+			return *this;
+		}
+	};
+
+	int main()
+	{
+		Owner x, y;
+
+		x = y;
+	}
+
+Örneğin şuan Owner'in copy assignmentini biz kendimiz yazdık fakat içini doldurmadık. Şuan kodu çalıştırdığımızda Member copy
+assignment çağırılmaz. Yazmamız gereken: 
+									
+									Owner& operator=(const Owner& other)
+									{
+										mx = other.mx;
+
+										return *this;
+									}
+
+***
+Genelde üretimdeki sınıfların veri elemanları çok fazla olabiliyor ve programcı özel bir ihtiyaç noktası olduğundan copy
+assignmenti kendisi yazıyor fakat bir tane elemana atama yapmıyor. Derleyiciler de tipik olarak uyarı mesajı vermiyor. Bunu 
+testte de tespit etmek zor oluyor. Dolayısıyla eski değerinde (unassigned) olarak kalacak.
+
+Eğer derleyiciye bırakmayacaksak her bir eleman için biz sorumluyuz, implementasyon bizde. 
+
+Aynı şekilde move assignment için de bu söylediklerimizin tümü geçerli.
+
+
+
