@@ -1,3 +1,25 @@
+ÖZET
+
+2'den fazla viable fonksiyon olması durumunda seçim kriterleri devreye girer. 
+
+En kötüden iyiye doğru sıralaması:
+	
+variadic conversion	(worst)
+	user-defined version	(better than variadic conv.)
+		standard conversion	(best)
+
+Eğer birden fazla standard conversion varsa;
+		
+	*En iyi seviyeye "Exact Match" deniyor.				=> Argüman ile parametrenin türünün tamamen aynı olması. Fakat birkaç durum daha var, aşağıda detaylı.
+	*İkinci kaliteye, "Promotion" deniyor.				=> Integral Promotion ve float'dan double'a dönüşüm.
+	*Conversion. Yani exact match olmayan, promotion olmayan.	=>
+	
+
+
+
+
+
+
 
 FUNCTION OVERLOADING
 ____________________
