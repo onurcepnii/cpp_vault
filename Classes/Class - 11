@@ -1,0 +1,1546 @@
+
+______________________________
+
+		String Sınıfı
+______________________________
+
+Data structure olarak baktığımızda bir Dynamic Array veri yapısı.
+
+Dynamic Array
+-------------
+Öğelerin bellekte ardışık olarak (contigious) olarak tutulduğu veri yapısı.
+
+
+Aslında string sınıfı da elemanları char türünden oluşan dinamik bir diziden başka birşey değil.
+
+***
+Dinamik dizi veri yapısının en az iki tane temel avantajı var;
+
+- Index ile elemana erişmek constant time. İlk elemanın adresini biliyorsak, elemanlardan herhangi birine pointer aritmetiği
+ile constant time'da erişebiliriz. Yani veri yapısındaki öğe sayısı arttıkça erişme maliyeti artmıyor. O(1)
+
+Dinamik Dizinin Size: Anlık olarak kaç öğe tutulduğu.
+
+Dinamik Dizinin Kapasitesi: Totalde kaç tane öğe tutulabileceği.
+
+Kapasite ve size eşit hale geldiğinde re-allocation yapmamız gerekebilir. Re-allocation dikkat etmemiz gereken bir nokta.
+Ciddi bir maliyeti var. Eski bellek alanındaki öğeler yeni bellek alanına kopyalanacak ve eski bellek alanı free edilecek.
+Bunun da maliyeti var.
+İkinci önemli problem ise Dangling Pointer. Eski bellek alanındaki nesneleri gösteren pointer'lar invalid olacak. Dolayısıyla
+onları dangling değil gibi dereference ettiğimizde UB'ye yol açar.
+
+Dinamik dizide tipik olarak 3 tane işaretçi kullanılır. 
+	(1) Başlangıç İşaretçisi
+	(2) Son Eleman Sonrası İşaretçisi
+	(3) Kapasite İşaretçisi
+
+-------
+
+Container Class
+---------------
+
+Birçok dilde collection deniyor fakat C++'da container diyoruz: Belirli bir türden öğeleri bir data structure kullanarak bir
+arada tutulmasını, kullanılmasını sağlayan sınıflara container class denir. Stl'in hazır sunduğu container sınıflar var örneğin
+vector.
+
+Her ne kadar string sınıfı yazı tutmak için olsa da aynı zamanda bir container class. Container olmak gereklerini yerine getiriyor ve stl containerlarının bazı ortak arayüzü var. Mesela bazı fonksiyonlar bütün stl containerlarında var. Dolayısıyla
+String sınıfının interface'inin bir kısmı container interface'i.
+
+
+	#include <iostream>
+	#include <string>
+
+	// string headerinden şöyle bir bildirim geliyor;
+	// using string = std::basic_string<char>;
+	// bu da tabi büyük bir yazım kolaylığı sağlıyor. --> std::string
+
+	int main()
+	{
+		std::string
+	}
+
+
+*** Çok Önemli ***
+
+String sınıfı çok büyük bir sınıf. (fat class) 
+Normalde container sınıfların interface'inde iterator denilen bir kavram kullanılıyor. Iterator aslında bir container'da tutulan
+öğelerin konum bilgisini tutan nesneler. 
+
+String sınıfı container olma gereklerini karşıladığı için hem containerların interface'
+ine sahip fakat hem de yazı işlemleri için özelleştirilmiş bir sınıf olduğu için aynı zamanda index index interface'ine sahip.
+
+Yani bazı durumlarda aynı fonksiyonun hem index interface'ini kullanan bir overloadu hem de iterator interface'ini kullanan bir
+overloadu var.
+
+Yani iki ayrı interface'e sahip.
+
+
+
+
+*** Çok Önemli ***
+
+Günümüzde string sınıfınının implementasyonunda hemen hemen bütün derleyiciler SBO(Small Buffer Optimization) - String sınıfı
+için kullanırsak terimi : "Small String Optimization" denilen bir implementasyon tekniğini kullanıyorlar.
+
+
+	int main()
+	{
+		using namespace std;
+
+		std::cout << "sizeof(string) = " << sizeof(string) << "\n";
+	}
+
+Şuanki ayarlarda bir pointer'in 4 bayt olduğunu düşünelim. Fakat burada ekrana bastırılan çıktı = sizeof(string) = 24
+
+Yani 3 tane pointer ile implemente edilebiliyorsa 4 + 4 + 4 = 12 bayt olması gerekirdi. Fakat neden öyle olmadı?
+	GCC veya Clang'de tipik olarak 32 bayt sizeof değeri. (?)
+
+Bunun nedeni Small String Optimization.
+
+___________________________________________
+
+		Small String Optimization
+___________________________________________
+
+Derleyici String sınıfı implementasyonunda String sınıf nesnesinin içinde bir bellek alanını buffer olarak kullanıyor. Yani
+yazı belirli bir uzunluk değerine gelmedikçe dinamik bir bellek alanı allocate etmiyor.
+
+Modern derleyicilerin hemen hepsi bundan faydalanıyor çünkü efficiency açısından çok büyük bir avantaj. Allocation ve deallocation yüksek maliyetli işlemler. Oysa yazıyı string nesnesinin fiilen içinde tutmak çok daha düşük maliyetli.
+
+
+
+
+Container sınıfların bazı nested type'ları var ve ortak bir şekilde isimlendirilmiş. Örneğin size_type isimli bir nested type'ı 
+var.
+	
+	using namespace std;
+
+	string::size_type
+
+Derleyiciye bağlı olarak string'in size_type'ı işaretsiz bir tamsayı türü. size_t türünün eş ismi.
+
+Çok önemli bir nested type'dır. Çünkü API'lerde, yani global fonksiyonlarda ya da sınıfların üye fonksiyonlarında, şu bilgiler
+her zaman stringin size_type'ı türünden değişkenlerle ifade ediliyor.
+
+	(1) Yazı Uzunluğu
+	Yazının uzunluğunu döndüren length ve size fonksiyonunun geri dönüş değeri String'ın size_type türünden.
+
+	(2) Karakterlerin İndeks
+	Bazı fonksiyonlar parametre olarak yaptıkları iş ile ilgili bir index değeri istiyorlar. Yani örneğin yazının hangi indeksli
+	karakterinden bahsediyoruz, ya da yazının hangi indeksli karakterinden başlayarak
+	String'in size_type'ı türünden.
+
+	(3) Kapasite
+
+	(4) Bazı API'ler, fonksiyonlar bizden tane, adet değeri istiyor. İşte buradaki adet değeri de yine size_type türü ile ifade
+	ediliyor.
+
+
+* String sınıfının implementasyonu herhangi bir şekilde yazıyı NTBS olarak tutmak zorunda değil.
+
+
+String'i ifade ederken std::string olarak ediyoruz başka stringler ile karıştırılmasın. 
+
+
+cstring
+-------
+öyle bir adres ki sonunda null karakter olan bir yazı var.
+
+
+
+
+_________________________________________
+
+		Accessor Fonksiyonları
+_________________________________________
+
+
+	.length()const 		
+
+	
+	.size()const 		// zaten bir stl container hariç, bütün containerların ortak üye fonksiyonu. Contanier'da tutulmakta
+						// olan öğe sayısını döndürür.
+	
+	.capacity()const 	// vector sınıfında da karşımıza çıkacak. allocate edilmiş bellek bloğunda kaç tane öğe tutulabilir 
+						// döndürür.
+
+	.empty()const 		// size'ın 0 olup olmadığını sınıyor.
+
+
+
+
+
+	int main()
+	{
+		using namespace std;
+
+		string str;
+
+		cout << "size= " << str.size() << '\n';
+		cout << "length= " << str.length() << '\n';
+		cout << "capacity= " << str.capacity() << '\n';
+
+		boolalpha(cout);
+
+		cout << "empty = " << str.empty() << '\n';
+		
+
+		####### OUT ########
+
+		size = 0
+		length = 0
+		capacity = 15
+		empty = true
+
+	}
+
+
+Sınıfın inserter'i sınıfın tuttuğu yazıyı stream'e veriyor. Yani ekstra kod yazmamıza gerek yok.
+
+*** Çok Önemli ***
+
+String sınıfının interface'inde fonksiyonların parametre değişkeni ya da değişkenleri olacka. ve parametre dğeişkeni veya değişkenleri için belirli kalıplar var. Hatta bu kalıplara karşılık gelen popüler terimler var.
+
+Bazı fonksiyonlar sizden yani çağıran koddan NTBS isteyecekler. Yani örneğin bir fonksiyonun parametresi sadece .(const char*)
+ise ve buna eşlik eden bir parametre yoksa bakar bakmaz bu fonksiyonun parametresinin cstring olduğunu anlayacağız. Yani bu
+fonksiyon bizden NTBS istiyor. Yani eğer bizim gönderdiğimiz adres NTBS değilse tanımsız davranışa yol açar.
+
+Eğer bir fonksiyonun parametresi yine bir adres ama onun yanında string'in size_type'ı türünden bir tamsayı değeri istiyorsa
+bu parametrik yapıya 
+
+.(const char*)					// cstring
+.(const char* p, size_t n)		// data - bu adresten(p) başlayarak bu kadar tane karakter(n)
+.(size_t n, char c)				// fill - bu kadar tane(n) bu bu karakterden(c)
+.(const string &)				// bir başka string nesnesinin tuttuğu yazıyı kullanacak demek, bizden bir string nesnesi istiyor
+								// string nesnesi hangi yazıyı tutuyorsa o yazının tamamını kullanacak
+
+.(const string &, size_t idx)	// substring - bu string nesnesinin tuttuğu yazının bu indeksi karakterinden başlayarak geriye 									   kalan bütün karakterlerinin oluşturduğu substring üzerinde işlem yapacak demek.
+
+.(const string&, size_t idx, size_t n) // substring - bu da substring fakat bu stringin bu indexinden başlayarak bu kadar tane 												karaketri üzerinde işlem yapacak demek
+
+
+------------------------------------------------------
+
+
+  
+.(const char*)					// cstring
+.(const char* p, size_t n)		// data - bu adresten(p) başlayarak bu kadar tane karakter(n)
+.(size_t n, char c)				// fill - bu kadar tane(n) bu bu karakterden(c)
+.(const string &)				// bir başka string nesnesinin tuttuğu yazıyı kullanacak demek, bizden bir string nesnesi istiyor
+								// string nesnesi hangi yazıyı tutuyorsa o yazının tamamını kullanacak
+
+.(const string &, size_t idx)	// substring - bu string nesnesinin tuttuğu yazının bu indeksi karakterinden başlayarak geriye 									   kalan bütün karakterlerinin oluşturduğu substring üzerinde işlem yapacak demek.
+
+.(const string&, size_t idx, size_t n) // substring - bu da substring fakat bu stringin bu indexinden başlayarak bu kadar tane 		
+.(char c)
+.(beg, end)						// All characters in range [beg,end)
+
+
+  
+
+
+		Constructor
+---------------------------
+
+
+	int main()
+	{
+		using namespace std;
+
+		string s1{};		|		bunlar default construct edilmiş, boşta, öğe tutmayan stringler.
+		string s2;			|		boş olması şu demek; 
+										- boşsa size veya length fonksiyonunu çağırdığımızda 0 döndürecek.
+										- empty fonk. çağırdığımızda True değer döndürecek.
+										- 
+	}
+
+
+
+-----------------------
+NOT : boş bir container için end() fonksiyonunu çağırabiliriz fakat bunu dereference etmek UB olur.
+
+	string str{"necati"};
+
+	auto iter = str.end();
+	*iter		// ub
+-----------------------
+
+
+// copy ctor
+
+	int main()
+	{
+		using namespace std;
+
+		string s1{"onur cepni"};
+		string s2 = s1;
+		string s3(s1);
+		string s4{ s1 };
+
+	}
+
+
+// move ctor, string nesnesini construct ederken eğer R val exp verirsek move ctor devreye girer.
+
+	int main()
+	{
+		using namespace std;
+
+		string s1{ "onur cepni"};
+		string s2 = std::move(s1);
+	}
+
+* Moved-From State
+
+	Yukardaki kodda s1 moved-from state'de dir. Standarda göre bu nesneler valid'tir. Bazı kaynaklarda bu nesnelerin kullanılmaması söylense de bu doğru değil. Fakat bu nesnemiz boş olmak zorunda olmamakla beraber genelde boş olur.
+	Örneğin length fonksiyonu ile test edersek muhtemelen 0 döndürecektik.
+
+	Moved-From State'e Yönelik Garantiler
+	-Valid state olmasının birinci koşulu invariant'ların tutmasıdır. Yani eğer yazı içinde "onur" tutuyorsa, length de ona göre
+	 4 olmalı.
+	-Ona tekrar yeni bir değer atayabilmemiz.
+
+
+Örneğin;
+
+	std::string foo();
+
+	int main()
+	{
+		auto s = foo();	// burada move semantics kullanılır. 
+	}
+
+
+// data ctor
+
+	int main()
+	{
+		using namespace std;
+
+		char buf[] = "onur cepni";
+
+		string str{ buf, 5 }; // burada ub durumu olup olmaması client ın sorumlulugunda. yani örneğin buf, 30 yazarsak UB olur.
+	}
+
+
+
+char parametreli ctor var mı?
+-yok
+
+
+*tipik mülakat sorusu*
+----------------------
+	
+	string s = 'A'; // hata
+
+	fakat bunun 3-4 ayrı yolu var. bunlardan biri cstring ctor;
+
+		string s = "A";
+
+	ikincisi fill ctor;
+
+		string s(1, 'A');
+
+	bir diğeri initializer list ctor;
+
+		string s{ 'A' };
+DİKKAT!
+	string str{ 10, 'x' };  böyle yazdığımızda cotr çakışması oluyor ve derleyici bunu initializer_list türünde ele alıp ona göre initalizer_list ctor'una çağrı
+	yapıyor. yani iki elemanlı bir liste ile çağrı yapmışız gibi sanki. zaten o yüzden yazdırırken sadece tek harf yazdırıyor. 
+	Tek harf yazdırmasının sebebi de aslında '10' karakterini de yazdırıyor fakat biz görmüyoruz. Örneğin 10 yerinde 72 olsa, ASCII'de H karakterine denk geliyor
+	bu sefer Hx yazdırır. Yani bu iki elemanı yazdırıyor aslında, çünkü açıkladığımız karışıklıktan dolayı 2 eleman var elimizde sadece.
+
+Bunlar var ancak char parametreli ctor yok. Genelde şu karıştırılıyor: char parametreli ctor yok ama atama operatör fonksiyonu var. 
+
+	string s;
+
+	s = 'A';
+
+Fakat dediğimiz gibi char parametreli bir ctor'a sahip değil.
+
+
+
+
+// fil ctor
+
+	int main()
+	{
+		using namespace std;
+
+		string s(10, 'A');
+	}
+
+Örneğin şöyle bir kullanım olabilir:
+	
+	size_t n = 45;
+
+	cout << string(n, '*') << '\n';	// 45 tane * yazdırdık
+
+
+*mülakat sorusu*
+----------------
+
+	class Myclass {
+	public:
+		Myclass(int)
+		{
+			std::cout << "Myclass(int)\n";
+		}
+
+		Myclass(int,int)
+		{
+			std::cout << "Myclass(int, int)\n";
+		}
+
+		Myclass(std::initializer_list<int>)
+		{
+			std::cout << "Myclass(init_list<int>)\n";
+		}
+	};
+
+
+	int main()
+	{
+		Myclass m1(34);
+		Myclass m2{ 47 };		// init_list ctor çağırılır
+		Myclass m3(3, 5);
+		Myclass m4{ 4, 6 };		// init_list ctor çağırılır
+	}
+
+	// init_list ctor u silersek bunlar int ve int,int ctor lar ile çağırılır.
+
+
+Peki bu neden çok önemli?
+
+	int main()
+	{
+		using namespace std;
+
+		string s1(20,'a');		// parantez olduğu için burada çağırılan ctor fill ctor. yani 20 tane a karakteri
+		string s2{53, 'x'};		// burada ise 53 tane x karakteri değil. burada init.list parametreli ctor çağırılır.
+
+		cout << s1.length() << '\n';	// 20 döndürür
+		cout << s2.length() << '\n';	// 2 döndürür. init.list ile alakalı
+
+		cout << s1.length() << '\n';	// 20 tane a karakteri yazdırır
+		cout << s2.length() << '\n';	// 5x yazar
+
+	}
+
+
+
+örn: 	string s1{ 'x' };	// init.list parametreli ctor
+		string s2{ "x" };	// cstring ctor
+
+
+
+
+// substring ctor
+
+	int main()
+	{
+		using namespace std;
+
+		string s1{ "onur cepni" };
+
+		string s2(s1);					// copy ctor
+
+		cout << "|" << s2 << "|\n";
+		string s3(s1,5);				// s3'in 5 indeksinden başlayarak geriye kalan hepsi.
+		cout << "|" << s3 << "|\n";
+		string s4(s1, 5, 3);			// s4'ün 5 indeksinden başlayarak 3 tane karakter.	
+		cout << "|" << s4 << "|\n";
+	}
+
+
+
+
+String sınıfının constexpr statik bir data memberi var. bunun adı npos. Hangi türden bir sabit? - string'in size_type türünden.
+	string::npos
+	std::size_t
+size_t türünün en büyük değeridir. Yani;
+
+	cout << string::npos << '\n';
+
+C'de arama fonksiyonları adres döndürür fakat C++'da size_type döndürür, index döndürür. Fakat aranan bulunamadığı zaman npos
+döndürüyor. Çünkü npos'un geçerli bir index olma ihtimali yok.
+
+
+Dolayısıyla npos'un en çok kullanıldığı yer arama fonksiyonlarının başarısızlık durumunda döndürdüğü değer.
+
+	using namespace std;
+
+	cout << "bir yazi girin: ";
+	string str;
+	getline(cin,str);
+
+	cout << "|" << str << "|\n";
+
+	auto idx = str.find('t');	// aranan bulursa idx'in değeri o karakterin indeksi, aranan bulunamazsa string'in npos
+								// değerini döndürür. dolayısıyla şöyle bir kod yazmamız gerekir;
+
+	if(idx != string::npos) {
+		std::cout << "bulundu idx" << idx << '\n';
+	}
+
+	else {
+		std::cout << "bulunamadi\n";
+	}
+
+
+
+C++17 ile eklenen if with initializer;
+
+	if (size_t idx = str.find('t'); idx != string::npos) {
+		std::cout << "bulunamadi\n";
+	}
+Scope leakage'ı engellemiş oluruz. idx ismi sadece burada gözükür olur. Hatta else de yazarsak onun içinde de görünür.
+
+Genel olarak if with initializer kullanılması önerilir.
+
+
+
+* ÖNEMLİ *
+
+	int foo();
+	int* bar();
+
+	int main()
+	{
+		if ( int x = foo()) {
+
+		}
+
+		if (int* ptr = bar()) {
+
+		}
+	}
+
+	bunlar C++98'den beri var zaten. burada x'in scope'u if bloğu içinde, ptr'nin de scope'u kendi if bloğu içinde. Burada
+	lojik sınama yapılıyor.
+
+	Yani if içinde değişken tanımlayabiliriz ve böylece scope'unu da daraltmış oluruz. Zaten bu C++'ın ilk zamanlarından beri
+	var.
+
+***********
+npos'tan
+	devam
+
+Örneğin bir string'de belirli bir index'ten yazının sonuna kadar bütün karakterleri almak istiyoruz.
+
+	int main()
+	{
+		using namespace std;
+
+		string str("bugun string konusunu isliyoruz.");
+
+		str.substr(5, 760);	// burada UB yok, string'in sonuna kadar alır. tabi string 670 indeksli değil fakat öyle olmadığı
+							// için string bitene kadar tüm karakterleri alır.
+	}
+
+Fakat bunu diğer stringler için de garanti altına almak istersek npos kullanabiliriz. Daha iyi olur ve kodun niyeti de daha iyi
+anlaşılır.
+
+	str.substr(5, string::npos);
+
+
+---------------------------
+
+Gereksiz yere re-allocation yaptırıp gereksiz kopyalamaya engel olmak için, kapasite değerini önceden belirleyebiliriz.
+
+	using namespace std;
+
+	string str(20, 'a');
+	// str.reserve(1000'000);
+	auto cap = str.capacity();
+
+	for (int i = 0; i < 1'000'000; ++i) {
+		str.push_back('a');
+		if (str.capacity() > cap) {
+			cout << "length = " << str.length() << " capacity = " << str.capacity() << '\n';
+			cap = str.capacity();
+		(void)getchar;
+		}
+	}
+
+
+Örneğin yukardaki kodda sürekli reallocation yapar. Fakat eğer biz önceden böyle olacağını biliyorsak capacity tayin edip bu
+işlemlerden sıyrılabiliriz.
+
+Yani reserve fonksiyonu ne yapıyor? -Kapasiteyi rezerve ediyor fakat size'ı arttırmıyor.
+
+	str.reserve(1000'000)
+
+	yazdığımızda demiş oluyoruz ki 1000000 karakter tutacak kadar bellek alanını allocate et. yani size 100000 olana kadar 
+	reallocation olmasın istiyoruz.
+
+Reserve fonksiyonunu çağırmamız gereken yerde çağırmayı unutmamamız gerekiyor yoksa gereksiz reallocation'lara neden olabilir.
+Tabi bu kullanıma bağlıdır. Örneğin o yazının ne kadar büyüyeceğini bilmiyorsak bu işlemin iyi olabileceğini söyleyemeyiz. Fakat
+önceden biliyorsak bunu stratejik olarak kullanabiliriz.
+
+
+
+---------------------
+
+
+
+
+____________________________________________________
+
+		String Interface'de ki Fonksiyonlar
+____________________________________________________
+
+String'te ki öğeye erişmenin yolları birden fazla;
+
+- [ ]
+- .at
+- .front()		| Container'de ki ilk öğeye referans semantiği ile erişim sağlar.
+- .back()		| Container'de ki son öğeye referans semantiği ile erişim sağlar. begin ve end fonksiyonları ile karışmasın. begin ve end iterator interface'ine ait.
+				| Onlar iterator döndüren fonksiyonlar. Oysa front ve back fonksiyonları sequence container'larda container'larda
+				| tutulan ilk öğeye ve son öğeye eriştiriyor.
+
+- *iter
+
+
+
+------------
+	[ ]
+------------
+
+Const overload edilmiş durumda.
+Referans semantiği ile yazının karakterine eriştiriyor.
+
+
+	string s("onur");
+	const string cs("onur");
+
+	s[2] = '*';
+	cs[2] = '*';	// error, const
+
+
+Eğer index geçerli değil ve yazının uzunluğundan büyükse bu tanımsız davranış (UB) oluşturur. Exception throw etmez. Bunun
+tek istisnası eğer index olarak kullandığımız değer yazının uzunluğu ise null character elde ederiz. Ve buna atama yaparsak
+sadece null character atarsak tanımsız davranış olmaz.
+
+Yani bu operatör fonksiyonu bir index geçerlilik kontrolü yapmıyor.
+
+
+
+
+------------
+	.at
+------------
+
+Index'in geçersiz olması durumunda exception throw eder.
+
+
+
+
+------------------------
+	 front ve back 
+------------------------
+
+Bu fonksiyonlar Sequence Container'ların hepsinde var.
+
+
+	int main()
+	{
+		using namespace std;
+
+		string s("onur");
+
+		cout << s << "\n";
+
+		s.front() = '*';
+
+		cout << s << "\n";
+
+		s.back() = '*';
+
+		cout << s << "\n";
+	}
+
+Ancak string boş olursa hem front hem de back fonksiyonun çağırılması UB oluşturur hem de exception throw etmez. Zaten exception
+throw etseydi ona tanımsız davranış demezdik.
+
+
+
+
+------------------------
+		*iter
+------------------------
+
+	int main()
+	{	
+		using namespace std;
+
+		string s("onur");
+
+		for(string::iterator iter = s.begin(); iter != s.end(); ++iter) // string::iterator yerine auto da yazabiliriz
+			cout << *iter << " ";
+	}
+
+Tabi burada sadece acces amaçlı dolaşıyorsak ayrı bir iterator tipi kullanmak daha doğru olur. O iterator türünün ismi de const
+iterator. Const iterator de ismi cbegin ve cend olan fonksiyonlar var.
+
+	for (string::const_iterator iter = s.cbegin(); iter != s.cend(); ++iter)
+		cout << *iter << " ";
+
+Sadece access amaçlı dolaşacaksak böyle kullanmak tabi ki daha doğru.
+
+
+
+Range Based For Loop dediğimiz döngü yapısı da zaten aslında derleyiciye böyle bir iteratör döngüsü oluşturtuyor.
+
+	Yani böyle yazmak yerine;
+
+		int main()
+		{
+			using namespace std;
+
+			string s("onur cepni");
+
+			for(auto iter = s.begin(); iter != s.end(); ++iter) {
+				char c = *iter;
+				cout << c;
+			}
+		}
+
+	Böyle yazabiliriz;
+
+		int main()
+		{
+			using namespace std;
+
+			string s("onur cepni");
+
+			for (char c : s)		| derleyici zaten bunu yukardakine döndürüyor.
+				cout << c;			| buna Range Based For Loop deniyor.
+		}
+
+
+Burada elemanın kopyasını kullanır yani değiştirme amacı yok. Fakat diğer durumlarda da kullanılır.
+
+- Elemanın kendisini kullanacaksak
+	
+	for(char &c : s)
+		c = '*';
+
+- Elemanın kopyasını kullanacaksak fakat kopyaya herhangi bir şekilde atama yapmayacağız.
+
+	for(const char c : s)
+
+- Elemanın kendisini kullanacaksak fakat kendisine bir atama yapmak istemiyorsak.
+
+	for(const char &c : s)
+
+- Universal Reference semantiğini kullanmak istiyorsak.
+	
+	for(auto &&c : s)
+
+
+
+String'te ki yazının karakterlerine iteratörleri dereference ederek range based foor loop ile sınıfın front ve back fonksiyonları
+ile [] ve at fonksiyonları ile yazının karakterlerine erişebiliyoruz.
+ 
+
+
+
+
+_________________________________________
+
+		Karşılaştırma İşlemleri
+_________________________________________
+
+	
+	using namespace std;
+
+	string s1("onur cepni");
+	string s2("onur cepni");
+
+	if (s1 < s2) {
+
+	}
+
+	if ( s1 == 'a') {
+
+	}
+
+
+C'den alışkın olduğumuz string compare interface;
+	
+	int compare(x, y)
+
+	retval > 0 		x > y
+	retval < 0 		y > x
+	retval == 0 	x = y
+
+
+---------------------
+
+Karşılaştırmanın çok daha kompleks biçimlerini oluşturmak için sınıfın compare üye fonksiyonu var ve bir sürü overload'u var.
+
+	s1.compare(args)
+
+Fonksiyonların geri dönüş değeri tıpki string compare fonksiyonunda olduğu gibi int ve her zaman yorumlanması şöyle;
+	
+	Eğer compare fonksiyonunun geri dönüş değeri 0'dan büyükse, s1 karşılaştırılan yazı neyse ondan daha büyük.
+	Eğer compare fonksiyonunun geri dönüş değeri 0'dan küçükse, s1 karşılaştırılan yazı neyse ondan daha küçük.
+	Eğer compare fonksiyonunun geri dönüş değeri 0 ise, s1 ile diğer yazı eşit.
+
+Bütün overload'lara sahip. Örneğin substring ile de compare yapabiliyoruz;
+
+****** BU KODDA HATA VAR DÜZELTİCEM 
+	s1.compare(s2, 4, 3);	// s1'de ki yazıyla s2'nin bu substring'ini karşılaştırıyoruz.
+******
+
+	string s1{ "necmettin" }, s2{ "husamettin" };
+
+	auto result = s1.compare(s2);
+	// Eğer s1, s2'den büyükse 1 mi döndürecek? Hayır böyle bir garanti yok. Pozitif bir değer döndürür fakat 1 olması zorunlu
+	değil.
+
+
+	Eğer birinci parametreye index geçmezsek her zaman *this'in kendisi ile karşılaştırmayı yapıyor.
+
+
+
+
+--------------------------
+		Mutators
+--------------------------
+
+Bazı işlemler yazıyı değiştirmeye yönelik. Yazıyı farklı bir yazı haline getirmeye yönelik.
+
+(1) Atama operatör fonksiyonlarından birini çağırarak yapabiliriz..
+
+		operator=
+
+(2) Daha karmaşık atamalar için sınıfın assign isimli üye fonksiyonu overload'ları var.
+
+sadece 2 tane değil tabi ki.
+
+Her iki fonksiyonun geri dönüş değeri de değişmiş nesneye referans.
+
+ 
+	int main()
+	{
+		string s1 {"onur cepni"};
+		string s2 {"onur cepni"};
+
+		cout << s1 << "\n";
+		s1 = s2;
+		cout << s1 << "\n";
+
+		s1 = "onur";	// cstring atayabiliriz.
+
+		s1 = "";		// yazının uzunluğu 0'a düşer.
+
+		s1 = {'c','a','n'};	// init.list parametreli atama opreatör fonksiyonu
+
+		Not: char parametreli ctor yok fakat char parametreli atama operator fonksiyonu var.
+
+	}
+
+
+Mutation işleminde kapasite ile ilgilenmek zorunda değiliz. Reallocation yapmak implementasyonun görevi. Önlem almaya gerek yok.
+
+Bunlar dışında bir de biraz daha karmaşık atamaları yapabileceğimiz, ismi assign olan fonksiyonun overload'ları var.
+
+
+	s1.assign("onur");
+	s1.assign(s2, 5);		// substring parametreli
+	s1.assign(s1, 5, 3);	// substring parametreli
+	s1.assign(20, '*');		// fill parametreli
+	...
+	vs. vs.
+
+Tabi bütün fonksiyonlar *this döndürüyor.
+
+Yazıyı mutate etmenin farklı yolları var. Örneğin operator+= fonksiyonu, append fonksiyonu.
+
+	string str = "onur";
+
+	string s = "cepni";
+
+	str += s;
+
+	str += "abc";
+
+	str += '.';
+
+	str += { 'x', 'y', 'z'};
+
+
+---------------------
+
+
+	string str = "onur";
+
+	str.append(5, 'A');			// yazının sonuna 5 tane a karakteri ekler
+
+	string str1 = "cepni";
+
+	str.appends(str1);			// yazının tamamını ekler
+
+	str.appends(str1, 3);
+
+	str.appends(str1, 8, 5);
+
+
+---------------------
+
+
+insert fonksiyonunu da kullanabiliriz.
+
+	
+	Insert'in Index Interface'i
+	---------------------------
+
+	string str = "onur";
+	string s = "0123456";
+
+	str.insert(2, "abc");	// 2 indeksine abc'yi insert eder.
+
+	ilk parametre index, ikinci parametre ne insert edileceği. Farklı farklı insertler yapabiliriz
+
+	str.insert(0, s, 5);
+
+	str.insert(0, s, 5, 3);
+
+	gibi gibi..
+
+-----------------------------------------------------------------
+
+
+  insert fonksiyonları iki ayrı interface'e sahip;
+-iterator interface
+-index interface
+
+
+container'ların insert fonksiyonu:
+
+nereye insert edilecek , diğer parametreler neyin insert edileceği. fakat ortak nokta ilk parametrenin insert edilecek konum 
+olması.
+
+	con.insert(con.begin(),value)
+
+
+
+int main()
+{
+	using namespace std;
+
+	string s{ "ABCDEF" };
+
+	s.insert(s.begin(), '!');	// yazının başına ! eklendi.
+}
+
+*** insert fonksiyonlarının önemli bir özelliği daha var -> geri dönüş değerleri
+
+		index interface'i ile insert eden fonksiyonları geri dönüş değeri *this
+
+		container'lerin insert fonksiyonları insert edilmiş ilk öğenin konumunu döndürür.
+		örn:	
+			auto iter = str.insert(str.begin() + 3, '*');	// geri değişkenin türü iteratör, peki kimin konumuna iteratör?
+															   -insert edilmiş öğenin konumuna iteratör
+			cout << *iter << '\n';		// insert edilmiş öğeyi yazdırır, yani *
+
+
+
+
+
+
+	resize fonksiyonu
+-------------------------
+
+container'de ki öğe sayısını değiştirmek için kullanılır. arttırma - azaltma
+
+	string s{ "onur cepni" };
+
+	cout << s.length() << '\n';
+	s.resize(50);
+
+	peki hangi karakter eklenecek? - container'de tutulan öğenin türünden default edilmiş öğenin değeri. bu string sınıfı için
+	null character
+
+	yani aslında şöyle yazmaya eşdeğer olmuş oluyor -> s.resize(50, '\0')
+	yazının uzunluğu 50 ye çıkacak ve 40 tane \0 eklenecek.
+
+
+resize'ı container de ki öğeleri silmek için de kullanabiliriz.
+
+	string s{ "onur cepni" };
+	s.resize(4);	// sadece onur kalır
+
+	s.resize(0);	// yazının tamamını silmek için resize(0) yapabiliriz ***
+
+
+
+		Silme İşlemleri
+--------------------------------
+
+c = container nesnemizin ismi olsun
+
+c.erase(iter)						// container'de ki bir öğenin konumunu bir iteratör olarak verirsek o iteratör konumundaki 
+										öğeyi siler
+
+c.erase(iterbeg, iterend)			// range, iki iteratör ile bir range veririz bu range'de ki öğeleri siler. yanir iterbeg 
+										konumundan başlayarak iterend konumundaki öğeye kadar silme işlemi yapar. fakat
+											iterend konumdaki öğe silinecek mi? - hayır
+
+
+* insert'de olduğu gibi, container'ların erase fonksiyonlarının (iteratör interface i ile çalışan) geri dönüş değeri önemli. geri
+dönüş değeri silme işleminden sonra silinmemiş ilk öğenin konumu.
+
+	string s{ "necatiergin" };
+
+	auto iter = s.erase(s.begin());
+
+	cout << *iter << '\n';		// cevap e, silinen öğeden sonraki öğenin konumu
+
+
+
+
+string sınıfının index interface'i ile çalışan da bir erase fonksiyonu var.
+
+	string s{ "onur cepni" };
+
+	s.erase(4, 6);	//hangi indexten başlayacak, kaç tane karakter silinecek?
+
+	fakat ikinci parametre default argument olarak string::npos alıyor. yani eğer şu şekilde çağırırsak;
+
+		s.erase(3);	// ikinci parametre default argument olarak npos alır ve 3.indexten itibaren tüm string silinir.
+
+		s.erase(0, string::npos);	// yazının hepsini sil demek.
+
+	hatta ilk parametre de default argument olarak 0 alıyor, dolayısıyla;
+
+		s.erase() dersek yazının hepsi silinir.	
+
+
+eğer iterator interface değil de , index interface kullanarak sadece tek bir karakter sileceksek;
+	örneğin ilk karakteri silelim;
+
+		s.erase(0,1);
+
+
+Silme işlemi için:
+-iterator interface ile çalışan erase
+-inde interface ile çalışan erase
+-resize
+-atama operatör fonksiyonu ile daha küçük bir yazı atayarak silme işlemi yapabiliriz.
+
+yazının tamamını silmek için çok fazla yol var.
+
+
+(1) container'ların clear fonksiyonu (container ların ortak interface i)
+	
+	s.clear()	// yazının tamamını siler
+
+(2) cstring parametreli atama op. fonksiyonu ile yazının tamamını silebiliriz
+
+	s ="";
+
+(3) resize fonksiyonu ile
+	
+	s.resize(0)
+
+(4) erase fonksiyonu ile
+
+	s.erase(0) veya s.erase(0, string::npos)
+
+(5) iterator inteface ile range erase yapabiliriz
+	
+	s.erase(s.begin(), s.end())
+
+(6) init. list atama op. fonk. ile
+
+	s = {}
+
+(7) hatta default ctor edilmiş bir string geçici nesnesine atayabiliriz
+
+	s = string{}
+
+daha da çoğaltılabilir.
+
+DİKKAT
+
+	c.erase(iterbeg, iterend)	burada container'ların range array fonksiyonu çağrılıyor. range ne demek? iterbeg dahil, iterend 
+								hariç. yani iterbeg'te ki öğe silinecek, iterend'e kadar olan bütün öğeler silinecek. ancak 
+								iterend konumunda öğe silinmeyecek. container'in end fonksiyonundan bahsetmedik, fonksiyona
+								geçilen range'in sonunu belirleyen iterator konumundan bahsettik.
+
+	*Eğer ikinci parametre olarak end() fonksiyonunu geçersek zaten bu fonksiyon dizinin son elemanını tutmuyor. dizinin son 
+	elemanından sonraki konumu tutuyor.
+
+
+
+***
+Sequence container'ların pop_back() fonksiyonu container'da ki son öğeyi siler. String de bir sequence container olduğu için
+onunda bir pop_back() fonksiyonu var.
+
+	string s{ "onur cepni" };
+
+	while(!s.empty()) {
+		cout << s;
+		(void)getchar();
+		s.pop_back();
+	}
+
+
+
+
+Arama Fonksiyonları / Yazıda Arama Yapmak
+------------------------------------------
+
+find
+rfind
+find_first_of
+find_first_not_of
+find_last_of
+find_last_not_of
+
+
+hepsinin geri dönüş değeri size_type, hepsi index döndürür. yani bulunan konumun indexinin döndürür.
+arananın bulunamaması durumunda string::npos döndürür.
+
+fonksiyonların hepsinin aslında son parametresi bir index ve default argument olarak 0 değerini alıyor. aramanın nerden 
+başlayarak yapılması gerektiği.
+
+
+	string s{ "kahramanmaras" };
+
+	s.find('a'); // index olarak default=0 geçildiği için baştan başlayıp 1.indexteki a'yı bulacak.
+
+	if(auto idx = s.find('a'); idx != string::npos) {
+		cout << "found = " << idx << '\n';
+		s[idx] = '*';
+		cout << s << '\n';
+	}
+
+find() fonksiyonu yerine rfind() çağırırsak aramaya sondan başlar. (rfind = reverse find)
+rfind() fonksiyonuna da aramanın başlayacağı indexin konumunu geçebiliriz.
+
+
+diğer parametreler arananın ne olduğu ile ilgili.
+
+s.find_first_of("ptrbk");		// bu karakterlerden birinin bulunduğu ilk konum. 
+
+s.find_first_not_of("mkru");	// bu karakterlerden birinin olmadığı ilk konum.
+
+s.find_last_of("mska");			// bu karakterlerden biri olan son karakterin konum.
+
+s.find_last_not_of("sad");		// bu karakterlerden biri olmayan son karakterin konum.
+
+
+starts_with ve ends_with C++20 ile eklendiler.
+boolean döndürüyorlar. 
+karakter alabiliyor.
+
+
+	string s( "onur");
+
+	s.starts_with('o');		// true
+	s.starts_with("on");	// true
+
+ends_with'de bunun tersi.
+
+
+Bazen arama yaptığımızda aradığımız şeyin nerede olduğunu / konumunu merak etmiyoruz. sadece var mı yok mu onu merak ediyoruz.
+C++23 öncesi şöyle yapardık;
+
+	string s{ "onur cepni"};
+
+	if(auto idx = s.find('k'); idx != string::npos) {
+
+	}
+
+fakat C++23 ile contains fonksiyonu eklendi. boolean döndürür.
+
+	if(s.contains('k'));	
+
+
+
+yazının sonuna ekleme yapmak için += operator fonksiyonları var, append overloadları var.
+
+
+
+***
+string sınıfının + operatör fonksiyonu sayesinde;
+	
+	std::string + std::string
+	std::string + cstring
+	std::string + char
+
+	işlemleri legal.
+
+
+	string s1{ "onur" };
+	string s2{ "cepni" };
+
+	s1 + " " + s2	// legal
+
+
+DİKKAT!
+	
+	char buf[] = "ali";
+
+	buf + "han" + s;	// sentaks hatası. çünkü iki pointer toplamı oluyor burada, bu da illegal
+
+
+
+<algorithm>
+
+Container demek bir data structure'ı implemente eden, ona bir interface sağlayan yani veri yapılarını temsil eden sınıflar.
+Örneğin std::vector, std::list, std::map vs. bunlar birer container'lar.
+
+Bir de algoritmalar var. Bunlar da container'lar üzerinde genelleştirilmiş bazı işlemleri yapan, algoritmaları implemente eden
+global generic fonksiyonlar.
+
+Örneğin elimizde bir vector var ve int tutuyor, bunu sıralamak istiyoruz. İsmi sort() olan fonksiyona çağrı yapabiliriz. Ama
+bunlar generic fonksiyonlar olduğu için sadece vector değil örneğin ona string de geçebilirim vs.
+
+String sınıfı da bir container'dır. Dolayısıyla bazı işlemleri string sınıfının üye fonksiyonları ile değil algoritma dediğimiz
+global fonksiyonlarla yapıyoruz.
+
+Örnek:
+	
+	string s;
+
+	cout << "bir yazi girin";
+	getline(cin,s);
+
+	sort(s.begin(),s.end());
+
+	reverse(s.begin(), s.end());
+
+
+
+Containerlarla ilgili en sık ihtiyaç duyulan işlemlerden biri: bir containerda ki belirli bir değere sahip;
+
+	(a) ilk öğeyi silmek,
+	(b) bu öğelerin tamamını silmek
+
+C++20'den önce erase-remove ya da remove-erase denilen bir idiom kullanılıyordu.
+
+		s.erase(remove(s.begin(), s.end(), 'a'), s.end());
+
+	bunun yerin C++20'de global erase fonksiyonu koydular.
+
+		erase(s, 'a');	// bu container'da bu değere sahip öğeleri sil.
+
+	idiom'dan bir farkı da geri dönüş değeri silinen öğe sayısı olması.
+
+
+
+---------------------------------
+
+
+
+
+String sınıfının önemli öğe fonksiyonlarından ikisi c_str ve data fonksiyonları. bunlar doğrudan yazının adresini döndürüyorlar.
+yani c_str fonksiyonu bir c_string döndürüyor. 
+
+	string str{"onur cepni"};	// bunu ntbs olarak kullanmak için sınıfın c_str fonksiyonunu çağırıyoruz.
+
+	yalnız dikkat edelim c_str fonksiyonunu çağırdıktan sonra elde ettiğimiz adres const char*
+
+	yani bu adresteki yazıyı salt okuma amaçlı kullanabiliriz ve yazı üzerinde bir değişiklik yaptıktan sonra aynı pointeri
+	yazıyı değiştirmek için kullanmamalıyız. o zaman ub olur.
+
+	bu da şu demek, bir c api'sine ntbs geçmek için sınıfın c_str fonksiyonunu geçebiliriz.
+
+	Neden NTBS kullanmamız gerekir?
+
+	İki tane tipik neden var.
+
+	(1) C API'leri.
+
+		Örnek: 
+
+			string str{"onur"};
+			strlen(str); // böyle yapamayız ntbs değil, onun yerine =>  strlen(std.c_str()); yazarız
+
+	(2) Bazen C++ std'de de gerekli oluyor (?)
+
+
+
+Modern C++'dan önce data() fonksiyonu vardı. fakat data fonksiyonu NTBS olarak döndürmüyordu. fakat modern C++ da bu değişti.
+data fonksiyonununda geri döndürdüğü adres NTBS.
+
+data() fonksiyonu ile c_str() fonksiyonunun şöyle bir farkı var.
+
+const bir string nesnesi için data fonk. const char*, ancak const olmayan bir string nesnesi için char*
+
+Günümüzde data() ile c_str() kullanmak arasında bir fark kalmadığını söyleyebiliriz. her ikisi de ntbs döndürür.
+
+
+C++17 ve 20 standardlarıyla başka gelişmeler de oldu. Generic programlama tarafı için bazı fonksiyonların üye fonksiyon olması
+yanı sıra global fonksiyon olarak da karşılıkları geldi.
+
+bir container'in size ini elde etmek için normalde container'in size fonksiyonunu çağırıyoruz. fakat c++ 17 itibariyle
+global size fonksiyonu dar va, generic bir fonksiyon.
+
+	std::size(str);
+
+c++20 ile bir de ssize() eklendi. yani işaretli bir tamsayı olarak size'ı döndürüyor.
+
+iki global fonksiyon var biri size() biri ssize()
+
+
+aynı şekilde data da generic bir fonksiyon olarak verildi. bu da c++17 ile eklendi.
+
+	data(str);
+
+
+aynı durum empty() fonksiyonu için de eklendi.
+
+	empty(str);
+
+
+fakat bu global fonksiyon furyası c++11 ile başladı. en önemlisi iteratör veren fonksiyonlar.
+modern c++ dan önce container ların iteratör veren fonksiyonlarının hepsi member fonksiyondu.
+
+	örneğin;
+
+		str.end()
+
+		str.begin()  bu şekildeydi.
+
+		begin(str)	<=> str.begin()		|
+										|	bunlar arasında bir fark yok.
+		end(str)	<=> str.end()		|
+
+
+		sort(str.begin(), str.end());		
+		sort(begin(str), str.end(str));	
+
+
+SORU:
+	Modern C++'da global begin ve global end fonksiyonlarının eklenmesinin en önemli sebepleri nelerdir?
+
+	- C dizileri içinde bunların kullanılabilmesi.
+
+	Örnek verelim bu duruma;
+
+		int ar[] = { 2, 4, 5, 1, 5, 7, 8,79, 11, 2};
+
+		sort(ar, ar + sizeof(ar) / sizeof(*ar));
+
+		for(int i : ar)
+			cout << i;
+
+	sort içine yazacağımız range'i bu şekilde yaptık çünkü begin() ve end() fonksiyonları member function.(eskiden)
+
+	fakat eğer bu fonksiyonlar global generic fonksiyonlar olursa bu sefer bu kodda da (yani bir c dizisi için) kullanabiliriz.
+
+		sort(begin(ar), end(ar));
+
+	Bu fonksiyonların en önemli faydalarından biri budur.
+
+
+
+özetle
+data, empty, size, ssize ve iterator veren fonksiyonların hepsinin global karşılıkları da var. iterator verenler modern c++ 
+başından itibaren. diğerleri de c++17 ve c++20 standardlarıyla dile eklenen global fonksiyonlar.
+
+
+
+Containerların ortak arayüzünün önemli bir bileşeni daha var.
+
+	diyelim ki iki tane containerimiz var.
+
+		string s1{10'000, 'a'};
+		string s2{20'000, 'x'};
+
+		auto temp = s1;
+		s1 = s2;			|  böyle swap işlemi yapsak olur ama trilyon kat maliyet gelir.
+		s2 = temp;
+
+	oysa string sınıfı aslında nasıl implemente ediliyor? string sınıf nesnesinin içinde tipik olarak 3 tane pointer var ve
+	bir de buffer var (small string optimization yapıyorsa)
+
+	o zaman biz bu allocate edilmiş bellek bloğundaki yazıları swap etmek yerine pointerleri swap ederek çok daha düşük
+	maliyet ile 3 tane pointer swap ederek yapabiliriz değil mi?
+
+	işte bunun için 
+		(a) container sınıfların üye fonksiyonu swap kullanabiliriz.
+
+			s1.swap(s2); // sadece ptr takas eder, yüksek maliyet yok
+
+		(b) ya da bunun generic karşılığı olan global swap
+
+			swap(s1,s2);
+
+		ister üye fonksiyonu olan swap'ı kullanalım ister global swapı kullanalım, bu şekilde pointerleri swap ederler.
+
+	Yani asla ve asla ilk koddaki gibi bir kod yazmamalı global swap veya member swap kullanmalıyız.
+
+
+	Modern C++'dan önce taşıma semantiği yoktu. modern c++ tan önce generic swap fonksiyonu şöyle implemente ediliyordu:
+
+		template <typename T>
+
+		void Swap(T& x, T& y)
+		{
+			T temp = x;
+			x = y;
+			y = temp;
+		}
+
+	Move semantics olmadığı için bu eskiden normal karşılanıyordu. Burada kopyalama semantiği devreye giriyordu.
+
+	Bu bu kod bu şekilde olsa, buradan derleyicinin bir kod yazması durumunda eğer T türü move only bir type sa, bu şablondan
+	yazılan kod move only type türünden olan x ve y yi takas edebilir mi? - hayır. çünkü kopyalama fonksiyonları delete edilmiş
+	durumda move only türler için.
+
+	Fakat artık modern c++ da bu şekilde implemente edilmiyor.
+
+		template <typename T>
+
+		void Swap(T& x, T& y)
+		{
+			T temp = std::move(x);
+			x = std::move(y);
+			y = std::move(temp);
+		}
+
+	bu şekilde kopyalamalar taşımaya dönüşüyor ve maliyet düşüyor sınıfın ne olduğuna bağlı olarak. Aynı zamanda move-only 
+	type lar için de buradan üretilen kodlar sentaks hatası olmayacak.
+
+	Burada önemli bir durum daha var : moved-from state.
+
+	Hatta bazı kaynaklarda diyor ki(yanlış tabi ki) moved-from state nesneleri kullanmayın. fakat öyle bişey olsa zaten bu kod
+	çöker. çünkü burada T temp = std::move(x); yani x moved-from state e geçiyor ama x'e alt satırda atama yapıyoruz?
+
+	Bu templateden üretilen kodun ub olmaması garantisi, moved from state de ki nesnenin bir valid state de olması ve atama 
+	yapılabilmesi.
+
+
+
+
+Shrink to fit
+-------------
+Modern cpp ile eklenen fonksiyonlardan biri.
+
+String'in kapasitesi ihtiyaç halinde otomatik olarak büyüyor. Ancak stringin kapasitesi bir iki istisna dışında otomatik olarak
+büzülmüyor.(shrink)
+
+	string s(400'000, 'A');
+	cout << "s.size() =" << s.size() << " s.cap =" << s.capacity() << "\n";
+	s.erase(50); 	// size = 50 ye düştü ancak kapasite düşmedi hala aynı değerde.
+
+	kapasiteyi size'a yakın bir değere büzmek için daha önceden vector sınıfından swap trick denilen idiomatic bir kod 
+	kullanılıyordu fakat artık ona gerek yok.
+
+	s.shrink_to_fit();
+
+
+
+
+	Replace
+---------------
+
+index ve iterator interface'inde var. çok fazla overload'u var.
+
+	string str("onur cepni");
+
+	str.replace(3, 3, "abc");
+
+
+
+
+		Substring Fonksiyonları
+-----------------------------------------
+
+3 tane aslında overload var, derleyiciler 3 overload yerine default argument kullanabiliyorlar.
+
+
+	str.substr();					// bu şekilde argüman göndermeden yaparsak
+	str.substr(0, string::npos);	// bu şekilde olur.
+
+	yani aslında str ile aynı değerde.
+
+	str.substr(2);		// 2 indeksinden başlayarak geriye kalan hepsi
+
+	str.substr(6, 5);	// 6 indeksinden başlayarak 5 tane
+
+
+
+ÖNEMLİ*
+
+		string str(100'000, 'a');
+
+		auto s = str.substr(50'000, 15'000);
+
+	salt okuma amaçlı böyle bir kod yazmaya ne gerek var? burada kopyalama yapılacak ve bir sürü maliyet olacak.
+
+	bunun yerine stringview kullanılırız. c++17 ile dile eklendi.
+
+
+		#include <string_view>
+
+		string str(100'000, 'a');
+
+		string_view sw(str.data() + 50000, 15000);
+
+	bellekte contigious olan bu adresten başlayarak bu kadar tane karakter üzerinde yapılacak. 
+
+
+
+
+
+Yazılar ile ilgili 3 tane önemli sınıf var => string, string_view(c++17), regex
+
+
+
+getline(cin,str,'.') => . delimiter, yani . ya kadar alır
+
+
+
+
+--------------------------
+		Dönüşümler
+--------------------------
+
+int stoi(const std::string&s, size_t* = nullptr, int base = 10)	// string'i int'e çeviriyor.
+{
+	
+}
+
+ikinci parametre diyor ki eğer sen bir argüman göndermezsen default olarak nullptr geçerim. eğer argümanı sen gönderirsen
+gönderdiğin argümana, okuduğum sayıdan sonraki ilk sayı olmayanın adresini gönderiirm diyor. yani bildiğimiz out parameter.
+
+örneğin 	string str{"123213onur.jpg"};	// burada o karakteri sayı okunduktan sonra ki ilk sayı olmayan karakter
+
+			size_t idx;
+
+			int ival = stoi(str, &idx);
+
+
+
+to_string() fonksiyonu, overload ları var. sayıyı yazıya çevirir. global function.
+
+	int ival= 930932;
+
+	auto s = to_string(ival);
+
+
+--------------------------
+
+
+	std::string name{"onur cepni"};
+	char buf[100];
+
+	auto n =name.copy(buff, 100, 0);	// geri dönüş değeri kopyalanmış karakter sayısı. 
+										// ancak sonunda null karakter yok, yazmıyor.
+
+	buf[n] = '\0';	// sonuna null karakter ekledik.
+
+	
+
+
+
+
+
