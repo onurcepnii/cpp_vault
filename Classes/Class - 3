@@ -1,0 +1,2270 @@
+
+______________________________________________
+
+Sınıf Nesnelerinin Hayata Başlaması
+Sınıf Nesnelerinin Hayatlarının Sonlanması
+______________________________________________
+
+Bir sınıf nesnesinin hayata başlamasını sağlayan, sınıf nesnesini kullanılabilir bir hale getiren sınıfın bir üye fonksiyonu. Bu fonksiyon için özel bir 
+terim kullanılıyor ==> constructor
+
+Sınıf nesnesinin hayatının bitmesini sağlayan fonksiyon ise ==> destructor
+
+* Constructor ve Destructor fonksiyonlar sınıfın non-static member(üye) fonksiyonlarıdır. 
+
+* Bir üye fonksiyonunun constructor olduğunu derleyici isminden anlar. Sınıfın ismi ile aynı olmak zorunda.
+
+* Constructor için geri dönüş değeri kavramı yoktur. Geri dönüş değeri void olması ile bu aynı şey değil. Geri dönüş değeri kavramı yok direk.
+
+	class String{
+	public:
+		String(); // constructor
+	};
+
+
+* Constructor'ın const üye fonksiyon olması yasak.
+
+* Constructor overload edilebilen bir fonksiyon, yani bir sınıfın birden fazla constructor'ı olabilir.
+
+* Sınıfın constructorları sınıfın public fonksiyonu olmak zorunda değil, private fonksiyonu da olabilir.
+
+* Constructor sınıfın üye fonksiyonu, dolayısıyla tanımı diğer üye fonksiyonlarda olduğu gibi .cpp dosyasında ya da başlık dosyasında inline olarak yapılabilir.
+
+* Bazı dillerde olan static constructor kavramı doğrudan C++ dilinde yok.
+* Destructor'ın ismi de yine class ismi ile aynı olmalı. Fakat isminin önünde tilda (~) tokeni var.
+* Destructor'un parametresi olmaz ve overload edilemez. Yani bir sınıfın bir tane destructoru olabilir.
+* Destructor'un da geri dönüş türü kavramı yoktur.
+
+	class Myclass{
+	public:
+		Myclass(); 	// constructor
+		~Myclass(); 	// destructor
+
+	};
+
+
+Default Constructor
+-------------------
+Parametresi olmayan veya tüm parametreleri default argüman alan constructor.
+
+
+Special Member Functions
+------------------------
+Modern C++'ta 6 tane special member functions var. 
+Bu fonksiyonları special yapan birinci özellik; belirli koşullar sağlandığında bu fonksiyonların kodunun bizim tarafımızdan değil
+derleyici tarafından yazılabilmesi.
+
+-Default Constructor
+-Destructor
+-Copy Constructor
+-Move Constructor	(Modern C++(11) ile dile eklendi)
+-Copy Assignment	
+-Move Assignment	(Modern C++(11) ile dile eklendi)
+
+
+* to default a special member function (derleyicinin bir special member fonksiyonun kodunu yazması demek)
+
+* Bu fonksiyonlar aynı zamanda sınıf nesnelerinin oluşturulması, hayatının bitmesi, bir sınıf nesnesinin hayata bir başka sınıf 
+nesnesinden değerini alarak gelmesi, sınıf nesnelerinin birbirine atanması gibi işlemleri gerçekleştiriyorlar.
+
+* Her constructor bir special member function değildir!
+
+* Örneğin bir fighter nesnesi oluşturduğumuzda onun kullanılabilir hale gelmesi için bazı işlemlerin yapılmasının gerekiyor tipik 
+olarak. Örneğin non-static data memberlarının belirli bir anlam taşıyan değerler ile donatılması gerekiyor vs. İşte constructorun 
+görevi bu, nesneyi anlamlı, kullanılabilir bir varlık haline getirmek.
+
+* Destructor ise  nesnenin hayatını bitirir. İleride göreceğimiz bazı durumlarda resource leak olmaması için nesnenin hayatının
+bitmesi ile birlikte o kaynakların geri verilmesi gerekecek. Bu işlemlerden sorumlu olacak fonksiyon destructor.
+
+
+
+	// .h dosyası
+
+	class Myclass{
+	public:
+		Myclass();
+	
+	};
+
+	
+	// .cpp dosyası
+
+	Myclass::Myclass()
+	{
+	
+	}
+
+
+
+* Örneklerin çoğunda sınıfların constructor ve destructorları class içinde inline olarak tanımlanacaktır. Fakat yukarıdaki gibi de
+tanımlanabiliyor.
+
+
+	class Myclass{
+	public:
+		Myclass()	// constructor
+		{
+			std::cout << "Myclass default ctor this = " << this << '\n';
+		}
+
+		~Myclass()	// destructor
+		{	
+			std::cout << "Myclass default ctor this = " << this << '\n';
+		}
+	};
+	
+	Myclass m;	// default initialize ettik. Dilin kuralı bu sınıf nesnesi için default constructor çağıracak.
+
+			// *** Global sınıf nesnelerinin hayata gelmesi main() fonksiyonunun çağırılmasınıdan önce. Hayatlarının 
+			// bitmesi main() fonksiyonunun kodunun çalışmasından sonra.
+	int main()
+	{
+		std::cout << " main has just started \n";
+	
+		std::cout << " main is finishing \n";
+	}
+
+
+OUTPUT = Myclass default ctor this = 00C35400
+	 main has just started
+	 main is finishing
+	 Myclass destructor this = 00C35400
+
+ÖNEMLİ NOTLAR
+-------------
+* Global sınıf nesnelerinin hayata gelmesi main() fonksiyonunun çağırılmasınıdan önce. Hayatlarının bitmesi main() fonksiyonunun
+				kodunun çalışmasından sonra.
+
+* Aynı kaynak dosyada 3 tane global değişken oluşturursak ( Myclass m1, m2, m3; ) bunların hayata gelme sırası belirli mi? 
+- Kesinlikle evet.
+Bildirimlerdeki sırayla hayata gelecekler. Önce m1 sonra m2 ve daha sonra m3. 
+
+* Farklı sınıf türlerinden de olabilir, orada da aynı bu şekilde.
+	
+	A a;	
+	B b;
+	C c;
+ Bu durumda constructorlar şu sırayla çağırılır; önce a sonra b sonra c. Destructorlar ise ters sırayla çağırılır. Yani hayata son
+gelen hayata ilk veda eder.
+Yani ilk c sonra b sonra a destructorı çağırılır.
+
+
+* Bu constructorların çağırılması global değişkenler için aynı dosyada bir sıraya tabii. Ancak farklı kaynak dosyalardaki global 
+değişkenlerin hayata gelme sırası dil tarafından belirli değil.
+Bununla ilgili probleme karşılık gelen idiomatic bir terim devar: "Static Initialization Fiasco"
+
+
+	cengiz.cpp
+		C cx; // Global olarak C türünden cx tanımlanmış olsun.
+	
+	doga.cpp
+		D dx; // Global olarak D türünden dx tanımlanmış olsun.
+	
+	oguzhan.cpp
+		O ox; // Global olarak O türünden ox tanımlanmış olsun.
+
+Bunlar global değişken olduklarına göre main() fonksiyonu çağırılmadan hayata gelecekler. Peki hangisi daha önce hayata gelecek? 
+- Belli değil. Ne bileyim ben
+ 
+
+
+Statik Ömürlü Yerel Değişkenler
+-------------------------------
+Statik yerel değişkenler fonksiyon çağırılmadığı sürece hayata gelmiyorlar.
+
+
+void func()
+{
+	static Myclass m;
+}
+
+int main()
+{
+	// herhangi bir çağrı yok func() fonksiyonuna, o yüzden Myclass m; nesnesi oluşturulmaz statik olsa da. Eğer foo() ya çağrı 
+	// gelirse oluşturulur.
+
+}
+
+*** Fakat foo() fonksiyonu sadece ilk çağırıldığında m nesnesi oluşturulur. İkinci üçüncü veya daha fazla çağırdığımızda tekrar tekrar
+oluşturulmaz.
+*** Statik ömürlü yerel değişkenlerin hayatları main fonksiyonunun sonlandırılmasından sonlanır. Yani destructor, main sonlandırıldıktan
+sonra çalıştırılıyor.
+
+
+Soru:
+Bir dizinin elemanları bir sınıf türünden olabilir mi? - Evet.
+	
+	Myclass ar[5]; // Constructor 5 kez çağırılır. Dizinin her bir elemanı için constructor 1 kez çağırılacak.
+
+
+---------------------------------------
+
+Mülakatlarda sorulan puzzle tarzı sorulara örnek:
+	
+0'dan 100'e kadar sayıları döngü kullanmadan ekrana yazdırın.
+
+	class Myclass{
+	public:
+		Myclass()
+		{
+		static int x = 0;
+		std::cout << x++ << " ";
+		}
+	
+	};
+
+	int main()
+	{
+		Myclass a[100];
+	}
+
+Burada 100 tane Myclass türünden nesne oluşturulacak ve constructor'ları çalıştırılacak. Bu sayede 0'dan 100'e kadar yazdırmış olacağız
+döngü kullanmadan.
+
+
+
+---------------------------------------
+
+
+	class Myclass{
+	public:
+		Myclass()	// constructor
+		{
+			std::cout << "Myclass default ctor this = " << this << '\n';
+		}
+
+		~Myclass()	// destructor
+		{	
+			std::cout << "Myclass default ctor this = " << this << '\n';
+		}
+	};
+
+	int main()
+	{
+		Myclass m;
+	}
+
+
+
+Soru 1 : Hangi durumlarda default constructor çağırılıyor?
+
+-Sınıf nesnesini default initialize ettiğimizde sınıfın default constructoru çağırılır.
+(C++'da Myclass m; şeklinde nesne oluşturduğumuzda buna default initialization denir. İlk başlarda öğrenmiştik.)
+	
+	Myclass m;
+
+-Sınıf nesnesini Value Initialization ile initialize edersek de default constructor çağırılır.
+	
+	Myclass m{};
+
+Not: Eğer Myclass m(); bu şekilde yazdığımızda aslında bu geri dönüş değeri türü Myclass sınıfı olan m isimli bir fonksiyon bildirimi
+olmuş oluyor, dikkat!
+
+
+---------------------------------
+
+
+Modern C++'da dile eklenen, eski C++'da olmayan önemli özellikler var. Bunlardan bazıları;
+__________________________________________________________________________________________
+
+1) Bir fonksiyonun delete edilmesi.
+
+  Bir fonksiyonun delete edilmesi demek bu fonksiyon için özel bir sentaksla ( bu sentaksa delete declaration diyebiliriz )
+fonksiyonun var olduğunun fakat ona yapılacak çağrının sentaks hatası olması gerektiğinin bildirilmesi demek.
+
+	void foo(int) = delete; // bu fonksiyona çağrı yapılması durumunda sentaks hatası olacak.
+
+	foo(2); // attempting to reference a deleted function gibi bir hata verir derleyici.
+
+
+
+	void foo(int) = delete;
+	void foo(double);
+	void foo(long);
+
+	// 3 tane overload var.
+
+	int main()
+	{
+		foo(2.3); // 2.fonksiyon çağırılır.
+
+		foo(32); // overload resolution ile ilk fonksiyon seçilir fakat o fonksiyon çağırılınca yine sentaks hatası verir
+			//  delete edildiğinden dolayı.
+	}
+
+* Yani bir fonksiyonun olmamasından kaynaklı sentaks hatası başka, o fonksiyonun delete edilmesinden kaynaklı sentaks hatası başka.
+
+* İstediğimiz herhangi bir fonksiyonu delete edebiliriz.
+
+* Bazı özel durumlar dışında tipik olarak sınıfların Special Member Functionları için kullanılır.
+
+	class Nec{
+	public:
+		Nec(int);
+	};
+
+	int main()
+	{
+		Nec x;	// burada sentaks hatası olmasının nedeni default constructorun olmaması.
+	}
+
+
+/////////////
+
+
+	class Nec{
+	public:
+		Nec(int);
+	};
+
+	int main()
+	{
+		Nec x;	// burada sentaks hatası olmasının nedeni 'Nec::Nec(void)': attempting to reference a deleted function.
+	}
+
+
+2) Default Bildirimi
+
+  Bir fonksiyonu default bildirimi ile bildirirsek, derleyiciye bunun kodunu sen yazacaksın talimatını vermiş oluyoruz.
+
+	class Nec{
+	public:
+		Nec() = default; // buna default bildirimi deniyor.
+				 // default constructor, default bildirimi ile bildirilmiş.
+		// yani programcı Nec sınıfının default constructorunun kodunun derleyici tarafından yazılmasını talep etmiş.
+	};
+
+* Herhangi bir fonksiyon default edilebilir mi? - Hayır. Eğer C++ 20 ile spaceship operatörünü saymazsak sadece Special Member 
+Functions default edilebilir.
+
+	class Nec{
+	public:
+		Nec(int) = default; // böyle yapamayız, çünkü bu bir special member function değil.
+	};
+
+
+---------------------
+***
+  Modern C++ diyor ki; Special Member Functions ( 6 tane yukarıda öğrendiğimiz ) şu statülerden birinde olabilir;
+
+- User Declared			( Programcı tarafından bildirilmiş )
+- Implicitly Declared		( Programcı bildirmemiş fakat dilin kuralları gereği derleyici bunun bildirimini yapıyor )
+- Not Declared			( Bildirilmemiş )
+
+Örnekler:
+
+	class Nec{
+	public:
+		Nec();	// constructor user declared
+	};
+
+
+	class Nec{
+	public:
+		Nec() = default; // user declared
+	};
+
+
+	class Nec{
+	public:
+			// implicitly declared
+	};
+
+
+	class Nec{
+	public:
+		Nec();	// constructor user declared
+	};
+
+
+	class Nec{
+	public:
+		Nec() = delete;	// user declared
+	};
+
+
+Programcı ya Nec() şeklinde ya, Nec() = default ya da Nec() = delete şeklinde yaparsa bunların hepsi ==> "user declared"
+
+Implicitly Declared
+-------------------
+Öyle durumlar var ki derleyici user declarde bir bildirim olmasa dahi dilin kurallarını zorlaması ile bir special member functionu
+implicitly bildiriyor.
+Fakat burada da 2 tane alt kategori var;
+
+- Bildiriyor ve default ediyor.
+- Bildiriyor fakat delet olarak bildiriyor.
+
+Soru:
+	class Nec{
+	public:
+		//implicitly declared (defaulted)
+		// defaulted denmesi ne demek? -> yani kodunu da derleyici yazdı.
+	};
+
+Şuanda Nec sınıfının default constructoru var mı? -Var.
+Kim bildirdi, kodunu kim yazdı? -Derleyici.
+
+O halde implicitly declared defaulted.
+
+
+	class Nec{
+	public:
+	
+	const int mx;
+	};
+
+	int main()
+	{
+		Nec = mx;
+	}
+
+Burada derleyicinin verdiği hata ==> 'Nec::Nec(void)' : attempting to reference a deleted function
+İşte burada derleyici yukarıda bahsettiğimiz gibi derleyici bir special functionu implicityle declare ediyor fakat aynı zamanda delete
+ediyor.
+
+* Bir special member function not declared ise o yok demektir.
+* Bir special member function user declared olabilir.
+
+
+Soru: Bütün sınıfların default constructoru olmak zorunda mı?
+-Hayır.
+
+* Default constructorun olmaması iyi birşey değil, aslında olması daha iyi.
+
+Örneğin:
+	class Nec{
+	public:
+		Nec(int); 
+	};
+
+	int main()
+	{
+		Nec ar[10];	// Örneğin Nec sınıfının default constructoru olmadığı için bu kod hata verecek. Default const. olması
+				// gerekli böyle bir dizi oluşturabilmek için.
+	}
+
+////////////////
+
+class Nec{
+	public:
+
+	};
+
+	int main()
+	{
+		Nec ar[10];	// Şimdi hata vermez çünkü default constructor var.
+	}
+
+ Bu gibi dilin bazı araçları default constructor olmasına göre çalışıyor. Bu yüzden genellikle default constructor olmaması iyi değil.
+
+
+** Önemli **
+
+Constructor Initializer List
+_______________________________________
+
+Bir constructorun sınıfın non-static veri elemanlarını initialize etmesini sağlayan sentaks.
+
+** Eğer programın akışı constructorun ana bloğuna girmiş ise, sınıfın veri elemanları hayata gelmiş durumdadır.
+
+	class Nec{
+	public:
+		Nec()
+		{
+			mx = 5; // burada assignment yapıyoruz. zaten mx hayatta, initialize etmiyoruz. Yani değer atamış oluyoruz.
+		}
+	private:
+		int mx;
+		double my;
+	};
+
+Constructor initializer list ise, sınıfın veri elemanını initialize eden, onu hayata getiren sentaks.
+Öyle durumlar var ki;
+	a) Sınıfın veri elemanı initialize edilmek zorundaysa, yani default initialize edilemiyorsa,
+
+* Sınıfın non-static veri elemanları için her zaman birinci tercih constructor initializer list olmalı. Constructor initialize list 
+kullanmadan doğrudan veri elemanına atama yaparsak şunlardan birisi söz konusu olabilir:
+
+- Ya bir sentaks hatasıdır,
+- Ya daha verimsiz bir kod üretilmesine neden oluyordur,
+- Ya da bir anlamsal farklılık söz konusudur.
+
+*** Her zaman tek seçenek olmasada birinci seçenek sınıfın non-static veri elemanlarının constructor initializer list kullanılarak 
+initialize edilmesi.
+
+	class Nec{
+	public:
+		Nec();
+	private:
+		int mx, my;
+	};
+
+	// .cpp
+	Nec::Nec() : mx(12), my(35)	//Nec'in default constructoru çağırıldığında sınıfın int türden mx elemanını 12 değeri ile my elemanını 35 değeri ile hayata başlatacak.
+	{				// Eğer constructorun yaptığı tek iş buysa, ana bloğunun içinin boş olması herhangi bir şekilde hata değil.
+					// Ancak madem bloğun içinde hiçbirşey yapılmıyor, blok boş olsun diyemiyoruz.
+					// Böyle durumlarda programcılar şöyle bir yazım tercih ediyor: Nec::Nec() : mx(12), my(35) {}
+	
+	}
+
+
+
+
+* Constructor initializer list'de tüm non-static data memberları initialize etmek zorunda değiliz. Eğer burada initialize etmediğimiz 
+non-static data memberlarvarsa o zaman onlar default initalize edilecekler. Eğer onların default initialize edilmesi sentaks hatası
+oluşturacaksa o halde sentaks hatası olacak.
+
+Örnek:
+
+	class Nec{
+	public:
+		Nec();
+	private:
+		const int mx;
+	};
+
+	Nec::Nec() : mx(0) { } // örneğin burada mx const olduğu için eğer biz bu şekilde init. etmesek ve derleyici default initialize
+				// etse sentaks hatası oluşur. Çünkü const değişkenler default initialize edilemezler.
+
+
+///////////////
+
+	class Nec{
+	public:
+		Nec();
+	private:
+		int& mx;
+	};
+
+	Nec::Nec() {
+			// Örneğin şuan mx referansı default init. edilmek zorunda. Referanslar default init. edilemezler. O yüzden 
+			// sentaks hatası olacak.
+	} 
+
+
+
+
+////////////////
+
+
+
+	class Erg{
+	public:
+		Erg(int);	// default constructor yok görüldüğü üzere.
+	};
+
+
+	class Nec{
+	public:
+		Nec();
+	private:
+		Erg e;
+	};
+
+	Nec::Nec()
+	{
+
+	}
+
+bu kod da sentaks hatası olur. Çünkü Erg e; ile Erg sınıfına ait bir nesneyi default initialize ediyoruz ve böyle init. ettiğimiz için 
+o nesnenin default constructoru olması gerekiyor. Fakat default constructor yok. Bu yüzden hata.
+
+
+*Eğer bir sınıfın default constructorunda ya da herhangi bir constructorunda bir veri elemanını constrcutor initializer list ile 
+initialize etmezsek derleyici oraya onun default initializ edildiği kodu ekliyor. Bu durumda default initialize edilmesi sentaks hatası
+oluşturuyorsa sentaks hatası oluyor.
+
+
+	class Nec{
+	public:
+		Nec();
+		void print() const
+		{
+			std::cout << "mx = " << mx << "my = " << my << '\n';
+		}
+	private:
+		int mx, my;
+	};
+
+	Nec::Nec()
+	{
+
+	}
+
+	int main()
+	{
+		Nec mynec;
+
+		mynec.print();
+	}
+
+
+Cevap: Tanımsız davranış. Çünkü mx ve my değerleri default initialize edilirler. Böylece indetermined value alırlar. Bunu cout ile 
+bastırmak da Undefined Behaviour.
+
+Soru:
+ Construct Initializer List'de küme parantezi kullanabilir miyiz? Yani direct list initialization yapabilir miyiz?
+
+Cevap: Standarda bağlı. Modern C++'dan önce orada braca init./uniform init. yoktu ve parantez zorunluydu. Fakat Modern C++ ile birlikte
+bu olanak getirildi.
+Uniform initializer biraz da bu nedenle verilen bir isim.
+Fakat hatırlayalım** Uniform Initialization'da Narrowing Conversion her zaman sentaks hatası.
+
+
+-----------------------------
+
+Örnek:
+
+	class Nec{
+	public:
+		Nec()
+		{
+			mstr = "ornek yazi"; // 1
+		}
+	private:
+		std::string mstr;
+	};
+
+Örneğin burada 1 numaralı ifadede initialization yok. Çünkü burada constrcut initializer list kullanılmadığı için mstr değişkeni 
+otomatik olarak default initialize edildi bile. Daha sonrasında 1 numaralı ifade ile değeri değiştirildi. 
+
+Burada görebildiğimiz üzere efficiency olarak da tek işlem yapmak yerine iki işlem yapıyor. Hatta daha önce gördüğümüz gibi bazı
+durumlarda sentaks hatası oladabilir.
+
+Daha güzel bir kullanım:
+	
+	class Nec{
+	public:
+		Nec() : mstr("ornek yazi") {}
+
+	private:
+		std::string mstr;
+	};
+
+
+
+----------------------------------------
+
+** ÇOK ÖNEMLİ ** Mülakatlarda Sorulur **
+
+-----------------------------------------
+
+Soru: Burada değişkenlerin hayata gelmesinde construction initializer listteki sıra mı esas alınacak yoksa bildirimdeki sıra mı?
+
+	class Nec{
+	public:
+		Nec() : my(10), mx(20) {}
+
+	private:
+		int mx, my;
+	};
+
+Cevap: Bildirimdeki sıra esas alınacak. Eğer programcı bunu bilmezse çok tehlikeli hatalara neden olabiliyor. Örneğin;
+
+	Nec() : my(10), mx(my/3) {}
+
+Yukarıdaki kodda bu şekilde yazsak çok büyük problem olur. Çünkü biz constructor initializater listte sırayı doğru yazsak da bildirim 
+sırası esas alındığı için ilk başka mx(my/3) kodu çalışacak. Bu kod çalıştığında my garbage value (indetermined value) değerinde.
+my'nin garbage valuesini kullandığımız için Undefined Behaviour oluşacak.
+
+Her zaman aynı sırayı koruyarak bu durumdan kaçınabiliriz.
+
+
+
+
+-------------------------------------------
+
+Constructor Initializer List'in en gerekli olduğu senaryolardan birisi ==> parametreli constructorlar
+
+
+	class Point{
+	public:
+		Point() : mx(0), my(0) {};			// noktanın x ve y değerini 0 yapacak.
+		Point(int x, int y) : mx(x), my(y) {};		// noktanın x ve y değerine aldığı argümanı atayacak.
+		
+		// Point(int x, int y) : x(x), y(y) {}; 	// Hatta bu şekilde yapsak da isimler farklı yerlerde aranacağı için hatalı olmaz.
+								// Fakat tabi aynı isimlerin böyle kullanılması önerilmez.
+	private:
+		int mx, my;
+	};
+
+
+
+
+
+--------------------------------------------
+ Default Member Initializer
+--------------------------------------------
+
+Çok yanlış anlaşılan bir sentaks. Bu sentanksa "In Class Initializer" deniyor. Standardın kullandığı terim ise "Default Member Initializer".
+Yani adı üzerinde memberin default olarak initialize edileceği değeri gösteriyor.
+
+Eğer ben yazdığım constructorlardan birinde constructor initializer list ile bu veri elemanlarını initialize etmezsem, normalde 
+derleyici bunları default initialize edecekti. Bu durumda derleyiciye demiş oluyoruz ki "Derleyici bu durumda default initialize 
+etmeyeceksin, benim verdiğim initializer değerlerini kullanacaksın."
+
+	class Point{
+	public:										     
+		Point(){	// aslında derleyici şöyle bir kod ekliyor şimdi Point() : x(0), y(0) {} 
+			
+		}
+
+	private:
+		//default member initializer
+		int x = 0;
+		int y = 0;
+	};
+
+
+Burada önemli bir nokta daha var. Default member initializer kullanırken {} ile initialize edebiliriz fakat parantez () ile
+initialize edemeyiz.
+	
+	private:
+		int x(10); 	// sentaks hatası
+		int x{ 0 };
+
+
+
+** Default Member Initializer'ın bir önemli sonucu daha var. Eğer derleyici sınıfın default constructorunu implicitly declare ediyorsa,
+derleyicinin yazdığı default constructor veri elemanlarının hepsini default initialize eder.
+
+
+-----------------------
+
+ÇOK ÖNEMLİ	
+
+-----------------------
+
+	class Myclass{
+	public:
+	
+	private:
+	
+	};
+
+bu kodda default constructor var. Kim yazdı? - Derleyici. Peki derleyicinin yazdığı bu default constructor ne yapıyor?
+
+Dilin kuralları derleyicinin implicitly declare ettiği bir special member fonksiyonun kodunun derleyici tarafından nasıl yazılacağını
+belirliyor. Yani derleyiciden derleyiciye göre değişen birşey değil.
+
+*** Burada dilin çok önemli bir kuralı devreye giriyor: Eğer derleyici implicitly declare ettiği bir special member functionu tanımlama
+sürecinde bir sentaks hatası oluşursa yani dilin kurallarını çiğneyen bir durum oluşursa, derleyici default initialize etmesi gereken
+special member functionu delete eder.
+
+
+Yukarıda yazdığımız koda tekrar bakalım;
+
+	class Myclass{
+	public:
+	
+	private:
+		int x;
+	};
+
+burada derleyici tarafından yazılması gerekilen constructor delete edilecek mi?
+Cevap: Hayır, dilin kurallarını çiğneyen bir durum yok.
+
+	class Myclass{
+	public:
+	
+	private:
+		int &r;
+	};
+
+Peki şimdi derleyici tarafından yazılması gerekilen constructor delete edilecek mi?
+Cevap: Kesinlikle evet. Çünkü referanslar default initialize edilemezler.
+
+Hatta mülakatta da sorarlar. Diyecekler ki bu sınıfın default constructorunun durumu ne? Yok cevabı yanlış, derleyici tarafından
+yazılır cevabı yanlış.
+Doğru cevap: derleyici tarafından delete edilir.
+
+Fakat tabi bu kodu çalıştırdığımızda sentaks hatası olmaz. Çünkü default constructoru delete edilmiş durumda. Peki ne zaman sentaks
+hatası olur?
+- Delete edilmiş default constructora çağrı yapma girişiminde bulunduğunda sentaks hatası olur.
+
+
+
+
+**ÖNEMLİ**
+Soru: Myclass sınıfının default constructoru delete edilmiş midir?
+
+	class Nec{
+
+	Nec(); 	// public değil dikkat! private
+
+	};
+
+	class Myclass{
+	public:
+	
+	private:
+		Nec mynec; // default init.
+	};
+
+
+Cevap: Doğru. Neden doğru? Çünkü Nec'in default constructoru private. Derleyici Myclass sınıfı için default constructor yazarken
+sınıfın veri elemanını default initialize edecek. Default initialize edilmesi demek default constructorun çağırılması demek.
+Private constructorun çağırılması sentaks hatası. O halde derleyici delete edecek.  
+
+	public:
+		Nec();
+
+böyle olsa sentaks hatası olmaz. Çünkü public olmuş oluyor.
+
+	public:
+		Nec(int); // böyle olsa sentaks hatası olur. 
+
+
+
+
+
+
+*** Eğer derleyici dilin kurallarına göre bir special member fonksiyonu implicitly declare ediyorsa, bu fonksiyon her zaman sınıfın
+non-static public inline üye fonksiyonudur.
+
+
+
+Örneğin bu sınıfın default constractoru inline fonksiyondur.
+
+class Nec{
+public:
+	//..
+
+};
+
+
+Soru:
+	class Nec{
+	public:
+		Nec();
+		Nec(int);
+		void func();
+	};
+
+	int main()
+	{
+	Nec mynec;
+
+	mynec.Nec(); 	// Sentaks hatası, bu şekilde çağırılamaz.
+
+	mynec.~Nec();	// Sentaks hatası yok fakat burada değil başka senaryolarda kullanmalıyız. Eğer böyle kullanırsak hem burada 
+			// destructoru çağırmış oluruz. Fakat ana bloğun sonuna gelindiğinde tekrar destructor çağırılır ve bu da 
+			// Tanımsız Davranış oluşturur.
+	}
+
+** Constractor nokta operatörü veya ok operatörü ile çağırılamaz. Dilin kurallarına aykırı.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+________________________________
+
+Complete Type | In-Complete Type
+________________________________
+
+Bir tür belirli bir kod noktasında ya bir complete type'dır ya da incomplete type'dır.
+
+-(Tamamlanmış Türler)
+-(Tamamlanmamış Türler)
+
+Sınıf türleri söz konusu olduğu zaman 2 tane ihtimal var.
+
+1) Derleyici o sınıfın varlığından haberdar fakat o sınıfın tanımını henüz görmemiş durumda.
+	Bunu oluşturmanın birden fazla yolu var. Biri, doğrudan sınıfın bildirimini yapmak. Böyle bir bildirime "forward-declaration" 
+	deniyor.
+
+  class Myclass;
+	
+   Bu bildirim okuyucuya Myclass isminin bir sınıf ismini olduğunu söylüyor. Ama Myclass sınıfının tanımını henüz derleyici görmedi. 
+   Burada Myclass sınıfını bir Incomplete type.Fakat eğer şöyle;
+
+  class Myclass{
+	
+	};
+
+  //bu noktada Myclass bir complete type
+
+   Bir yolu daha var. 
+	
+	class Myclass* ptr;
+
+   Böyle de incomplete type olur. Fakat yaygın kullanım ==>  class Myclass; şeklindedir.
+
+Derleyici için bunlar incomplete type. Fakat derleyici class definition'u gördüğü anda derleyici için o sınıf türü bir complete type.
+
+Dilin sentaks kuralları bazı durumlarda Incomplete type'ın kullanılmasını legal olarak görüyor fakat bazı durumlarda o bağlamda bir 
+sınıf türünün kullanılması için türün complete type olması gerekiyor.
+
+-Bir fonksiyon bildiriminde bu türü kullanmamız sentaks hatası oluşturmaz.
+
+  class Myclass;
+	
+  Myclass foo(Myclass);
+  Myclass foo(Myclass*);	// böyle de olabilir
+  Myclass foo(Myclass&);	// böyle de olabilir
+
+hatta 
+
+  class A;
+  class B;
+  class C;
+
+A foo(B,C); // böyle de kullanılabilir.
+
+
+2) Type-Alias Declaration
+
+  class Myclass;
+  typedef Myclass* MyclassPtr; 
+  using MyclassPtr = Myclass*;
+  using Type = Myclass;
+
+3) Incomplete type türlerden pointer değişkenler tanımlanabilir.
+
+  class Nec;
+
+  int main()
+  {
+  	Nec* mp;  // object pointer, Nec sınıfının ne olduğunu bilmemesine rağmen bellekte yer ayırır. Derleyiciden derleyiciye 
+		  // değişir fakat pointer genelde 4byte yer kaplar.
+  	Nec* mp {};
+	Nec* mp = nullptr;
+
+  }
+
+-------
+
+class Nec;
+
+Nec *create_nec();	//legal
+void foo(Nec *);	//legal
+
+int main()
+{
+	Nec* p = create_nec();	//legal
+	foo(p);			//legal
+}
+
+
+
+Peki Neler Yapamayız?
+---------------------
+
+-Nesne tanımlayamayız.
+
+	class Nec;
+
+	Nec mynec;
+
+/////////////
+
+	class Nec;
+
+	extern Nec mynec; // non-defining declaration
+	//dolayısıyla derleyici burada bir nesne oluşturmayacağı için burada bir hata yok.
+	int main()
+	{
+	
+	}
+
+//////////////
+
+	class Myclass{
+		Myclass m; // bu noktada bu incomplete type
+	};
+
+Bir sınıfın kendi türünden bir elemanı olamaz. Fakat şununla karıştırma, sınıfın kendi türünden pointer veya referans elemanı olabilir.
+
+	class Myclass{
+		static Myclass m; // bu bir bildirim, bir tanımlama değil
+	};
+
+Dolayısıyla hata yok.
+
+/////////////////
+
+	class Myclass;
+
+	auto sz = sizeof(Myclass); // sentaks hatası.
+
+Incomplete türler sizeof operatörünün operandı olamazlar.
+
+
+/////////////////
+
+	class Myclass;
+
+	Myclass* foo();
+
+	Myclass*p = foo();
+	
+	auto x = *p; // sentaks hatası çünkü *(dereferencing) operatörünün operandı yapılmış
+
+
+/////////////////
+
+
+Bazen programcılar Incomplete type işini görecekken complete type yapıp kullanırlar.
+
+	#include "nec.h"
+	class Myclass{
+
+		Nec* mp;
+
+	};
+
+
+Örneğin bu kodda Nec* mp ifadesini legal kılmak için gidip koskoca header file include etmeye gerek yok.
+
+Veri elemanının Incomplete type olması bir sentaks hatası değil.
+
+	class Nec;	
+
+	class Myclass{
+
+		Nec* mp;
+
+	};
+
+Böyle yapmayıp da nec başlık dosyasını include edersek bir dependency oluşacak. Aynı zamanda compile time da uzar. Çünkü nec.h'yı 
+include ettik, onun da include ettiği başlık dosyaları olacak vs. Bu da compile time uzatacak.
+
+
+
+- void bir türdür. Fakat void doğuştan Incomplete type'dır.
+
+	void x; // sentaks hatası, incomplete türden nesne tanımlanmaz.
+
+
+- Bir nesnenin türü void olamaz fakat bir ifadenin(expression) türü void olabilir.
+
+void func();
+
+func(); // bu ifadenin türü void
+
+(void)getchar(); // bu ifadenin türü void
+
+
+
+___________________________________
+
+	Copy Constructor
+___________________________________
+
+Bir nesne hayata değerini aynı türden bir başka nesneden alarak gelirse, hayata gelen nesne için çağırılan fonksiyon sınıfın copy constructor dediğimiz
+special member fonksiyondur.
+
+
+
+Kopyalama Semantiği Ne Demek?
+-----------------------------
+Bir nesneyi bir başka nesnenin değeriyle hayata getiriyoruz. Ya da bir nesneye bir başka nesnenin değerini atıyoruz.
+
+Bu durumda;
+
+ (1) Bu nesneler birbirinden bağımsız yani bundan sonraki bu nesnelerin biri üzerinde yapılan işlemler diğerini etkilemeyecek. Yani bu nesneler
+	değerce birbirlerinden	bağımsız.
+ (2) Bu nesneler karşılaştırılabilir (equality comparable) nesneler ise, bu atamadan sonra bu nesneler eşit olacak.
+
+
+
+
+	class Myclass{};
+
+	int main(){
+
+		Myclass m1;
+
+		Myclass m2(m1);	// m2 için cc çağırılacak
+
+
+	}
+
+
+
+* Her sınıfın copy constructoru olmak zorunda.
+
+
+Rule Of Zero Ne Demek?
+----------------------
+Herhangi bir sorun çıkarmıyorsa special member fonksiyonlarının derleyici tarafından yazılması. Derleyicinin yazdığı fonksiyonların
+işimizi gördüğü noktada tercihimiz hep o yönde olmalı.
+
+
+Derleyicinin implicitly declare edilen ve default edilen copy constructor şöyle bir parametrik yapıya sahip;
+-public, non static, inline üye fonksiyonu
+-parametresı sınıf türünden sol taraf referansı
+
+	class Myclass{
+	public:
+		//////
+		Myclass(const Myclass &r) : ax(r.ax), bx(r.bx), cx(r.cx) {}	
+
+	private:
+		A ax;
+		B bx;
+		C cx;
+	};
+
+Derleyicinin yazdığı copy constructor sınıfın elemanlarını, diğer nesnenin elemanlarıyla copy construct ediyor. Böylece hayata gelen nesne değerini
+diğer nesnenin elemanlarından alıyor.
+
+Örnek:
+
+	class Date{
+	public:
+		Date(int d, int m, int y) : md{d}, mm{m}, my{y} 
+		{
+			std::cout << "Date(int,int,int) this = << this << '\n\;
+		}
+		
+		~Date()
+		{
+			std::cout << "~Date() this = " << this << '\n';
+		}
+
+	private:
+		int md, mm, my;
+	};
+
+
+	int main()
+	{
+		Date d1{ 12, 3, 1997 };
+
+		Date d2 = d1;
+	}
+
+Output:		Date(int, int, int) this = 00EFFD38
+		~Date() this = 00EFFD2C
+		~Date() this = 00EFFD38
+
+Buradan anlıyoruz ki derleyici copy constructor yazmış ve d2 nesnesini onun ile oluşturmuş.
+
+
+
+
+Başka Hangi Durumlarda Copy Constructor Çağırılır?
+--------------------------------------------------
+
+(1) Bir fonksiyonun parametresinin bir sınıf türünden olması ve fonksiyona da sınıf türünden bir argüman geçilmesi.
+	
+	class Myclass {};
+	void func(Myclass m)
+	{
+	
+	}
+	
+	int main()
+	{
+		Myclass m1;
+		func(m1);		// böyle bir nesne (m1) ile çağırırsak, burada fonksiyonun parametre değişkeni için copy constructor çağırılacak.
+	
+	}
+
+
+Bu senaryoda fonksiyonun parametresi için copy constructor çağırılır ve nesne oluşturur.
+
+
+(2) Bir fonksiyonun geri dönüş değeri türünün bir sınıf türü olması ve fonksiyonun return ifadesinin bir myclass nesnesi olması.
+
+	class Myclass{};
+
+	Myclass g;
+
+	Myclass foo()
+	{
+		return g;
+	}
+
+Bu durumda fonksiyonun geri dönüş değerini tutacak temporary object için yine copy constructor çağırılacak. Fakat burada dilin bazı başka kuralları devreye
+girebiliyor => Copy elision, return value optimization, named return value optimization, mandatory/guaranteed copy elision gibi.
+
+* O ya da bu nedenle copy constructor delete veya default edilebilir.
+
+	class Myclas{
+	public:
+		Myclass(const Myclass&) = default;
+	};
+
+////////////////
+
+	class Myclas{
+	public:
+		Myclass(const Myclass&) = delete;
+	};
+
+	int main()
+	{
+		Myclass m1;
+		Myclass m2 = m1; // sentaks hatası.
+	}
+
+
+
+
+
+Madem derleyici copy constructor yazıyor, biz hangi senaryolarda copy constructor yazmalıyız?
+- Öyle sınıflar var ki, bu sınıflar kaynak(resource) kullanıyorlar. Bu kaynak dinamik allocate edilmiş bir bellek bloğu olabilir, bir dosya olabilir, bir 
+veri tabanı bağlantısı olabilir vs.vs. Böylesi durumlarda sınıf nesneleri bu kaynağa tipik olarak bir handle tutuyor(pointer veya referans).
+
+	class String{
+	public:
+		String(const char*);
+
+	private:
+		char* mp;  // dinamik olarak allocate edilen bellek bloğunun adresini tutsun
+		std::size_t mlen;
+	};
+
+	int main()
+	{
+		String str("bugun hava cok guzel"); // dinamik bellek bloğu allocate edilecek, mp o bloğun adresini tutacak. mlen ise yazının uzunluğunu
+						    // tutacak.
+		String s = str;  //copy constructor ile s nesnesi oluşturulacak.
+	}
+
+
+					       ac40 = blok başının adresi
+     ------------				__
+str | mp = ac40  | ----------------------->    "bugun hava cok guzel"
+    | mlen = 20  |		 	     ^ 
+     ------------                            |
+					     |
+                                             |			str nesnesinin değerleri ile s nesnesi copy constructor vasıtası ile oluşturuldu.
+				             |			fakat bu sefer şöyle bir problem var ki bu nesnelerden birisinin hayatı biterse bu allocate
+					     |			edilmiş bellek alanı destructor ile free edilecek.
+     ------------			     |
+s   | mp = ac40  |----------------------------
+    | mlen = 20  |		 
+     ------------
+
+
+____________________________________________________________________
+
+	RAII IDIOMU (Resource Acquisition Is Initialization)
+____________________________________________________________________
+
+Constructor kaynağı edinir, destructor kaynağı geri verir. Destructor çağırıldığında kaynak sızıntısı ihtimali oratan kalkar.
+
+
+
+
+class String{
+	public:
+		String(const char*);
+		~String()
+		{
+			if(mp)
+			  std::free(mp);
+		}
+
+	private:
+		char* mp;  // dinamik olarak allocate edilen bellek bloğunun adresini tutsun
+		std::size_t mlen;
+	};
+	
+	void func(String s)
+	{
+		//
+		// burada s'nin hayatı bitiyor. ve s için çağırılan destructor bellek bloğunu free edecek. fakat str'nin hayatı devam ediyor.
+		// o halde str dangling pointera dönüşür.
+	}
+
+
+	int main()
+	{
+		String str("bugun hava cok guzel"); // dinamik bellek bloğu allocate edilecek, mp o bloğun adresini tutacak. mlen ise yazının uzunluğunu
+						    // tutacak.
+		String s = str;  //copy constructor ile s nesnesi oluşturulacak.
+		func(str);	
+	}
+
+
+
+İşte böyle sınıflar için copy constructor yazma görevini derleyiciye verirsek derleyici elemanları birbirine kopyalıyor. Oysa çoğu zaman bizim istediğimiz,
+yukarıdaki kodda olduğu gibi, bu nesnelerin birbirinden bağımsızlığını kılmak ve value semantiği korumak için hayata gelen nesnede ayrı bir bellek alanı
+allocate edecek bir copy constructor olması. Yani görsel olarak şöyle;
+
+
+					       ac40 = blok başının adresi
+     ------------				__
+str | mp = ac40  | ----------------------->    "bugun hava cok guzel"
+    | mlen = 20  |		 	     
+     ------------                           			
+ 
+					       f2d4
+     ------------			       __
+s   | mp = f2d4  |------------------------>   "bugun hava cok guzel"
+    | mlen = 20  |		 
+     ------------
+
+
+"Kaynağın kendisi değil o kaynağın adresini tutan pointer, referans kopyalanıyor" ==> shallow copy, memberwise copy
+"Kendi kaynağını edinsin, copy constructor ile hayata gelen nesnenin kaynağına kopyalama yapılsın" ==> deep copy
+
+Örneğin yukarda deep copy kullanmamız gerekir.
+
+
+
+	
+class String{
+
+	public:
+	String(const String& other) : mlen(other.mlen)
+	{
+		mp = static_cast<char*>(std::malloc(mlen + 1));
+		if(!mp) {
+			std::cerr << "cannot allocate memory\n";
+			std::exit(EXIT_FAILURE); }
+		std::strcpy(mp, other.mp);
+	}
+
+	String(const char* p) :  mlen(std::strlen(p))
+	{
+		mp = static_cast<char*>(std::malloc(mlen + 1));
+		if(!mp){
+			std::cerr << "cannot allocate memory\n";
+			std::exit(EXIT_FAILURE);
+		}
+		std::strcpy(mp, p);
+	}
+
+	~String()
+	{
+		if(mp)
+			std::free(mp);
+	}
+	
+	std::size_t length() const
+	{
+		return mlen;
+	}
+
+	void print() const
+	{
+		//..
+		std::cout << '[' << mp << "]\n";
+	}
+
+	private:
+	std::size_t m_len;
+	char* mp;
+};
+
+int main()
+{
+	String str("bugun sinifin ozel fonksiyonlarini isliyoruz");
+	
+	str.print();
+}
+
+
+Bu kodda biz copy constructor yazmasak derleyicinin yazacağı copy constructor bu;
+	String(const String &other) : mlen(other.mlen), mp(other.mp) {}
+
+İşte bu sığ kopyalama yani shallow copy, memberwise copy.
+
+Fakat bizim işimizi bu görmüyor o yüzden kendimiz yazdık. 
+
+* Copy Constructor'u programcı olarak biz implemente ediyorsak, artık bütün veri elemanlarının alması gereken
+değerleri almasından biz sorumluyuz. Derleyiciye bırakırsak derleyici onları default init. eder. Fakat tabi böyle
+init. edilmesi işimize geliyor, bir problem olmuyorsa sorun yok.
+
+	String str("string metni");
+	String str2("string2 metni");
+
+	str = str2;	// !!! operator overloading
+
+* Bir sınıf nesnesini  atama op. kullanarak aynı türden bir l val. expr. sınıf nesnesi atandığında, bu atama işlemini
+yapan sınıfın özel bir üye fonksiyonu ==> Copy Assignment Function
+
+* Burada kopyalama yapan fonksiyon, sınıfın copy assignment fonksiyonu. Sınıfın copy assignment fonksiyonu olmak zorunda yani olmamak gibi bir ihtimal
+söz konusu değil.
+
+* Fonksiyonun isminin içinde operator keywordü olacak. Ondan sonra hangi operatörü overload ediyorsak, yani sınıf nesnesi hangi operatörün operandı olduğunda
+derleyicinin o ifadeyi bu fonksiyona yapan çağrıya dönüştürmesini istiyorsak o operatörün sembolü gelecek.
+
+	operator+
+	operator==
+	operator!=
+	operator++
+
+O zaman atama da bir operatör. Sınıf nesnesi  atama operatörünün operandı olduğunda bu bir fonksiyon çağrısına dönüştürülüyorsa bu da bir operator overloading
+vakası. O halde benzer şekilde fonksiyonun isminin operator assignment ->  operator=
+
+Bir sınıf nesnesine aynı türden başka bir sınıf nesnesini atama operatörü ile atadığımız zaman çağırılan fonksiyonun ismi -> Operator Assignment
+
+
+
+	class Myclass()
+	{
+	
+	};
+
+	int main()
+	{
+		Myclass m1, m2;
+
+		m1 = m2;	// burada çağırılan fonksiyon bir constructor değil. Constructor nesneyi hayata getiren bir fonksiyon.
+				// burada hayata gelen bir fonksiyon yok, m1 de m2'de zaten hayatta. 
+				// m1.operator = (m2);	bu da aynı anlamda
+	}
+
+
+* Dolayısıyla Copy Assignment fonksiyonu nesne hayata getiren bir fonksiyon değil. Ve dolayısıyla constructor ve destructor için geçerli olan geri dönüş
+değeri kavramı olmaması durumu bu fonksiyon için geçerli değil.
+
+Derleyici Copy Assignment Fonksiyonunu Nasıl Yazar?
+
+
+	class Myclass{
+	public:
+		Myclass(const Myclass &r) : ax(r.ax), bx(r.bx), cx(r.cx) {}
+		Myclass& operator=(const Myclass &)	// copy assignment function // derleyici böyle bir definition yapar;
+		{
+			ax = r.ax;
+			bx = r.bx;	// Eğer elemanlar primitive türlerse bu atamalar basit atamalardır.
+			cx = r.cx;	// Fakat bunlar sınıf türünden nesnelerse, bu sefer sınıf türünden nesneler atama operatörünün operandı olduğu için
+					// yine elemanlar için copy assignment fonksiyonu çağırılır.
+			return *this;	// fonksiyonun geri dönüş değeri atama operatör fonksiyonu kendisine atama yapılmış nesneyi döndürür.
+		}			
+	private:			
+		A.ax;
+		B.bx;
+		C.cx;
+	};
+
+* Eğer yukardaki copy assignment fonksiyon tekse ve overloadu yoksa, aldığı argüman L value de R value de olabilir. Çünkü const l val referans hem l hem r
+valueye bağlanır.
+
+
+//////////////////////////////
+
+	a = b 	// bu işi yapan fonksiyonun geri dönüş değeri L value referans olduğuna göre, bu ifade bir Lvalue expression'dur.
+
+
+Geri dönüş değerinin L value reference olması, C++ dilinde atama operatörü ile oluşturulan ifadelerin L value olmasını destekliyor.
+Yani sadece sınıflar için değil, genel olarak atama operatörü ile oluşturulan ifadeler C++'da L value expression'dur.
+
+
+//////////////////////////////
+
+
+	Myclass m1, m2;
+
+	m1.operator = (m2);			// bu fonksiyonun geri dönüş değeri L val. ref. ve m1'in kendisini döndürür. O halde şöyle yapabiliriz;
+	m1.operator=(m2).set(12).print();	// set fonksiyonunu m1 için çağırmış oluyoruz. hatta set fonksiyonunun da geri dönüş değeri eğer
+						// Myclass& ise print fonksiyonunu da m1 için çağırmış oluyoruz.
+	
+
+--------------------------------------
+
+Copy Assignment işleminde yine daha önce bahsettiğimiz ve yazdığımız ufak çaplı String sınıfındaki UB,dangling pointer durumunu hatırlayalım. Deep copy ve 
+shallow copy. Burada da deep copy olmadığı için eğer copy assignment kodunu derleyici yazarsa buna benzer bir problem olur. Fakat farklı olarak bu durumda
+zaten nesnemiz hayatta, yani yeni bir nesne oluşturulmuyor constructor ile. Fakat bu durumda kaynağı doğrudan kaybediyoruz ve resource leak oluşmuş oluyor.
+
+Yani burada copy assignmentin yapması gereken kendi kaynağını geri verecek ve böylece resource leak olmasını baştan engelleyecek. Sonrası aslında copy 
+constructorun koduyla neredeyse aynı kod. Yeni kaynak edinecek ve deep copy yapacak.
+
+
+	deep copy		copy ctor
+	release resources	destructor
+
+Copy assignment rr + dp yapar.
+
+Bazı sınıfları implemente ederken bunları ayrıştırıyorlar kod tekrarını engellemek için. Release resources ve deep copy örneğin ayrı fonksiyonlar olabiliyor.
+Copy Assignment bu ikisini çağırabiliyor. Copy Constructor sadece deep copy çağırıyor vs.
+
+--------------------------------------
+
+ Copy Assignment Fonksiyonunu daha önce sadece bazı kavramları kavramak için oluşturduğumuz küçük çaplı String sınıfı için kendimi yazalım:
+
+ String& operator=(const String &other)
+ {
+	mlen = other.mlen;
+	std::free(mp);		//önce kaynağımızı geri veriyoruz. // derleyiciye bıraksak mp = other.mp; yapacak ve yukarda bahsettiğimiz problemler olacak
+
+	mp = static_cast<char*>(std::malloc(mlen + 1));
+
+	if(!mp)
+		std::cerr << "cannot allocate memory \n";
+		std::exit(EXIT_FAILURE);
+	}
+	std::strcpy(mp, other.mp);	
+	return *this;
+ }
+
+//////////////////////////
+
+	int x = 10;
+	
+	x = x;	//self-assignment
+
+* Eğer biz nesnemiz için böyle bir self-assignment yaparsak problem olur;
+
+
+	String str("bugun ozel fonksiyonlari goruyoruz");
+
+	str = str;
+	
+	str.print();
+
+* Ne olmuş oldu? Biz copy assignment fonksiyonunda yazdığımız kodda iki nesne de aynı ve biz o kodda kopyalanan nesnenin kaynağını geri verdik fakat bu durumda
+iki nesne de aynı. Yani ikisinin kaynağını da free etmiş olduk. Bu durumda pointerlar dangling pointer oldu.
+
+* Eğer nesnenin kendisine atanmasında bir problem olmasını istemiyorsak, atama operatörünün sol operandı olan nesne ile sağ operandı olan nesnin aynı nesne
+olup olmadığını kontrol etmemiz lazım.
+
+Bu kontrolü de iki nesnenin adreslerini karşılaştırarak yapabiliriz.
+	
+	String& operator=(const String& other)
+	{
+		if(this == &other) // self assignment
+			return *this;
+		...
+		...
+	}
+
+************
+
+this: Atama operatörünün çağrıldığı nesnenin adresi.
+&other: Atama işleminde sağ taraftaki nesnenin adresi.
+
+************
+
+
+Peki neden gidip de programcı x = x yapsın? Fakat self-assignment sadece bu şekilde yapılmaz tabi ki.
+
+	void func(Myclass *p1, Myclass *p2)
+	{
+		*p2 = *p1;	// örneğin burada her iki parametreye aynı nesne geçilmeyeceği ne malum? o zaman da self-assignment olur.
+	}
+
+
+----------------------------------------------------
+
+
+
+
+Sınıfın elemanları handle değilse, kaynak kontrolunu kendisi gerçekleştiren sınıflarsa derleyiciye bırakabiliriz.
+
+Not:
+	Bir de copy assignment fonksiyonun idiomatic başka şekilde bir yazım biçimi var. Bu yazım biçimine ilişkin
+	idioma " Copy Swap Idiom " deniyor.
+
+---------------------------------
+
+//temporary objects = tipik olarak bir sınıf türünden nesne, fakat ortada o nesnenin isminin olmadığı ifadeler.
+
+class Nec{};
+
+void foo(const Nec&);
+void foo(Nec&&);
+
+böyle bir overload ile L value ve R value sınıf nesneleri için farklı implementasyonlar sunuluyor.
+
+int main()
+{
+Nec mynec;
+	
+//mynec		değişkenin ismi var. Bir ismin söz konusu olduğu ifadeler Lvalue expr, dolayısıyla bu da öyle
+//Nec{}		değişkenin ismi yok sınıfın ismi var sadece. İsmin olmadığı ifadeler R val. expr, dolayısıyla
+		bu da öyle.
+
+		ancak bu ikiside Nec türünden birer nesne.
+
+//std::move(mynec)		l value de, r value de argüman olarak alsa, r value bir ifade oluşturur.
+//static_cast<Nec&&>(mynec)	pek ala bunu da kullanabiliriz, ikisi de aynı işi yapmış oluyor.
+
+// r value expr olan sınıf nesnesi oluşturan birkaç tane ifade var. Birisi temporary object oluşturma ifadeleri,
+// ikincisi std::move() fonksiyonuna yapılan çağrı ifadesi, üçüncüsü move yerine sınıf türünden r value ref. türüne
+// static_cast operatörü ile cast eden ifadeler.
+
+}
+	
+
+/////////////////////////////
+
+class Nec{};
+
+void foo(const Nec&);		// 1
+void foo(Nec&&);		// 2
+
+Nec 	bar();
+Nec&& 	baz();
+
+int main()
+{
+	Nec mynec;
+	
+	foo(mynec);			// 1. foo çağırılır.
+	foo(std::move(mynec));		// 2. foo çağırılır.
+	foo(Nec{});			// foo'ya gönderdiğimiz ifade bir temporary object ifadesi, yani PR value
+					// expression. Dolayısıyla R value expr. Bundan dolayı 2. foo çağırılır.
+
+
+	foo(bar());	// R value expr. argüman vermiş olduk, 2.foo
+	foo(baz());	// R value expr. argüman vermiş olduk, 2.foo
+
+}
+
+
+* 2.foo'yu silersek kodda sentaks hatası olmaz, hepsi 1.foo'ya bağlanır. Çünkü const l value referans hem l value'ya
+hem r value'ya bağlanıyor. Bu durum için kullanılan popüler terim " Fallback ".
+
+* Öyle durumlar var ki, aslında koda bakarak hem biz aynı zamanda derleyici, bir sınıf nesnesinin artık kullanılma
+olanağının olmadığını,o nesneyi kullanacak bir kodun söz konusu olmadığını anlayabiliyor(uz). Böyle bir durumda
+bir sınıf nesnesi varken onun değeriyle başka bir sınıf nesnesini hayata getirmek istediğimizde şimdiye kadar (Modern
+C++'dan önce) değerini alacağımız sınıf nesnesinin hayatının bitecek olmasına karşın onun kaynağını yine kopyalıyorduk
+bir çok durumda.
+
+
+
+
+
+______________________________________________________
+	
+	Move Constructor / Move Assignment
+______________________________________________________
+
+
+
+Move constructor ve move assignment öyle fonksiyonlar ki copy constructor ve copy assignmenta göre, yaptıkları iş
+kopyalama yapmamak (deep copy yapmamak), diğer nesnenin kaynağını çalmak ve sadece kaynağını çalmakla yetinmeyip 
+diğer nesne için destructor çağırıldığında kaynağı geri vermemesini sağlamak.
+
+Peki bunu nasıl yapacağız?
+
+Başka bir kodun kullanma ihtimali olmayan, hayatı bitecek, gidici nesneler dilin kurallarına göre bu ifadeler
+sağ taraf değeri. O zaman 2 tane constructor overloadu olsa biri sol taraf değeri argümanlar alsa, diğeri sağ taraf
+değeri argümanlar alsa, sağ taraf değeri argümanı alan overload bilecek ki referansın bağlandığı nesnenin hayatının
+biteceği ve başka bir kodun ona ihtiyaç duymadığını bilecek ve onun kaynağını çalacak. 
+
+Derleyicinin yazdığı move constructor, ismi sınıfın ismi ile aynı (constructor olduğu için) fakat parametresi
+Myclass&& (sınıf türünden sağ taraf referansı).
+
+	class Myclass{
+	public:
+		Myclass(const Myclass&);	// copy ctor
+		Myclass (Myclass &&);		// move ctor // bunlar göründüğü üzere overload
+
+		Myclass& operator=(const Myclass&);	// burada bir kopyalama yapılacak
+		Myclass& operator=(Myclass&&);		// burada kaynak çalınacak. bunlar da overload.
+							// işte bu kaynak çalmaya move(taşıma) diyoruz.
+	};
+
+* Taşıma semantiği aslında hiçbir kopyalama yapılmayacak durumlarda  gereksiz yere kopyalama yapılmasının önüne geçer. Kopyalama maliyeti olağanüstü yüksek
+olabilir bazı durumlarda.
+
+* Derleyicinin yazdığı move constructor, elemanlara taşıma yapıyor kopyalama yapmıyor. yani elemanları da move constructor ile hayata getirecek.
+
+
+// en sık yapılan hata -> Myclass(Myclass &&r) : ax(r.ax), bx(r.bx), cv(r.cx) {} // r sağ taraf referansı olsa da ifade r.ax ve diğer ifadeler isim olduğundan
+dolayı L value bir ifade oluşturur. Bu şekilde yazarsak sık yapılan hataya bizde düşmüş oluruz. Bunun yerine r value ifadesi oluşturan std::move() fonksiyonunu
+kullanmalıyız.
+
+
+	class Myclass{
+	public:
+		////
+		Myclass(const Myclass& r) : ax(r.ax), bx(r.bx), cx(r.cx) {}
+		Myclass(Myclass &&r) : ax(std::move(r.ax)), bx(std::move(r.bx)), cv(std::move(r.cx)) {}
+
+	private:
+		A ax;
+		B bx;
+		C cx;
+	};
+
+
+Sınıfın move copy contstructorun derleyici tarafından yazılması, eğer sınıfın elemanları veya elemanlarından birisi handle ise felakete neden olur. Ama
+sınıfın move constructorunun olması gerekirken olmaması bir felaket senaryosu değil. Sadece efficiency açısından zararı var.
+
+Yani move constructoru olmasa taşımanın faydalarından yararlanabileceğimiz bir yararlanamaz ve kopyalama işlemi yapardık. Move constructorun ve move assignment'in
+varlığı bir hata durumunu engellemekten ziyade daha verimli hale getirmek, gereksiz kopyalamalardan kaçınmaktır*. Gereksiz kopyalama yerine kopyalamayı
+ortadan kaldırıp kaynağın bir nesneden adeta bir nesneye geçmesini sağlamak.
+
+String sınıfımız için bir move constructor yazalım.
+
+
+
+	class Myclass{
+	public:
+	String(const String& other) : mlen(other.mlen)
+	{
+		mp = static_cast<char*>(std::malloc(mlen+1));
+		if (!mp) {
+			std::cerr << "cannot allocate memory\n";
+			std::exit(EXIT_FAILURE);
+		}
+		std::strcpy(mp, other.mp);	
+	}
+
+	String(String && other) : mlen(other.mlen), mp(other.mp)
+	{
+		other.mp = nllptr; // değerini çaldığımız nesnenin pointeri hala bizim aldığımız adresi gösteriyor. destructor ile bizim adresin silinmemesini
+			     	   // sağlamak için mp pointerini nullptr yaptık.
+		other.mlen = 0;	   // bu da gerekli.
+	}
+
+	String& operator=(const String& other)
+	{
+		if(this == &other) // self assignment
+			return *this;
+		mlen = other.mlen;
+		std::free(mp);
+
+		mp = static_cast<char*>(std::malloc(mlen+1));
+		if (!mp) {
+			std::cerr << "cannot allocate memory\n";
+			std::exit(EXIT_FAILURE);
+		}
+		std::strcpy(mp, other.mp);
+
+		return *this;
+	}
+
+	String(const char* p) : mlen(std::strlen(p))
+	{
+		mp = static_cast<char*>(std::malloc(mlen+1));
+		if (!mp) {
+			std::cerr << "cannot allocate memory\n";
+			std::exit(EXIT_FAILURE);
+		}
+		std::strcpy(mp, other.mp);
+	}
+	
+	~String()
+	{
+		if (mp)
+			std::free(mp);
+	}
+
+	std::size_t length()const
+	{
+		return mlen;
+	}
+	
+	void print()const
+	{
+		std::cout << '[' << mp << "]\n";
+	}	
+
+	private:
+	std::size_t mlen;
+	char* mp;
+
+	};
+
+
+	
+	int main()
+	{
+		String str(String{"bugun yine cok sicak bir hava vardi."}) // bu bir temp. obj. yani R value expr. o zaman move ctor çağırılacak.
+					//move ctor da bunun kaynağını kopyalamak yerine onu çalacak.
+	}
+
+
+* Sınıfın hem copy cotr hem move cotr varsa bizim bunlardan hangisinin çağırılması gerektiğini düşünmemiz gerekmiyor. Gönderdiğimiz argüman L value ise
+derleyici copy cotr seçecek, R value ise move cotr seçecek.
+
+mülakat sorusu
+--------------
+
+class Myclass{};
+
+void func(Myclass &&)
+{
+
+}
+
+int main()
+{
+	Myclass m;
+
+	func(std::move(m)); // *
+	//
+}
+
+Soru * işaretli satırdan sonra m nesnesinin kaynağı çalınmış mıdır?
+-Cevap = Hayır.
+
+Bir nesneyi sağ taraf referansına bağlamak onun kaynağını çalmak demek değil.Aslında assembly kodunda göreceğimiz şey func'ın parametresi bir pointer ve
+myclass nesnesinin adresini alıyor. Peki kaynağın çalınmasını sağlayan ne olacak? - func içindeki implementasyon.
+
+func içinde öyle bir implementasyon olmalı ki bu sağ taraf referansının bağlandığı nesnenin kaynağını çalmalı. Onunda 2 tane yolu var; ya bir myclass nesnesini
+hayata getireceğiz ya da bir myclass nesnesine atama yapacağız.
+	
+	class Myclass{};
+
+	void func(Myclass && r)
+	{
+		Myclass mx = r; // r ifadesi L value. o halde bu nesne için copy cotr çağırılacak, move değil. o zaman kaynağı çalmayacak, kopyalayacak.
+				// kaynağı çalması için burada ki mx'i hayata getirirken kullandığımız nesnenin r val. expr. olması gerekir. peki nasıl
+				// yapacağız? - std::move() ile. Yani sorunun cevabının evet olabilmesi için bu kodun; Myclass mx = std::move(r); olması lazım.
+	}
+
+	int main()
+	{
+		Myclass m;
+	
+		func(std::move(m));
+		//
+	}
+
+
+///////////////////////////////
+
+* En çok kullanılan yapılardan birisi;
+L value ve R valueler için ayrı fonksiyon yazmak. L value için yazılan fonksiyonun bir kopyalama yapmasını sağlamak ama R value alan fonksiyonun kopyalama
+yerine taşıma yapmasını sağlamak.
+
+
+	class Myclass{};
+
+	void func(Myclass && r)
+	{
+		Myclass mx = std::move(r);
+	}
+	
+	void func(const Myclass& r)
+	{
+		Myclass mx = r;
+	}
+
+
+
+ * Bir sağ taraf nesneyi sağ taraf referansına bağlayarak taşıma semantiğinden faydalanmış olmuyoruz. Sadece taşıma semantiğine zemin hazırlamış oluyoruz.
+Taşımayı gerçekleştiren, burada bu referansın bağlandığı nesneyi kullanarak yeni bir nesne oluşturmak. Veya varolan bir nesneye atama yapmak.
+
+* Move constructorun implemente edilmesi için bir fayda sağlaması gerekiyor.
+
+
+	class Myclass{
+	private:
+		int ar[1000];
+
+	};
+
+Örneğin yukarda move cotr ile yapabileceğimiz birşey yok. Çünkü elimizde bir ptr yok ki kaynağını çalalım. Fakat aşağıdaki koda bakarsak;
+
+	class Myclass{
+	private:
+		std::string* p;
+	};
+
+Örnek olarak bu ptr dinamik olarak allocate edilmiş bir bellek bloğundaki string nesnelerinin bulunduğu bir bloğun adresini tutuyor olsaydı, burada move cotr
+hayati önem taşırdı. Çünkü kopyalama semantiği ile yetinirsek, kopyalama yoluyla hayata getireceğimiz nesne gidecek ayrı bir bellek alanı allocate edecek
+ve üstelik orada string nesnelerini oluşturacak. Yani diğerinin allocate ettiği bellek bloğunda 10000 tane string nesnesi varsa, bizim hayata getirdiğimiz
+string nesnesi de o 10000 tane string nesnesini hayata getirecek. Yani burada inanılmaz yüksek bir maliyet söz konusu olabilir.
+
+
+
+	Move Assignment
+--------------------------------
+
+Bir sınıf nesnesi bir sınıf nesnesine bir R value expr. sınıf nesnesini atadığımızda, aslında atama op. sağ tarafındaki nesnenin artık bir daha kullanılmayacağını
+biliyor olsak da, eğer move assignment dediğimiz fonksiyon olmasaydı orada kopyalama yapmaya zorlamış olacaktık.
+
+	class Myclass{
+		Myclass(const Myclass& r) : ax(r.ax), bx(r.bx), cx(r.cx) {}					// cctor
+		Myclass(Myclass &&r) : ax(std::move(r.ax)), bx(std::move(r.bx)), cx(std::move(r.cx)) {}		// move ctor
+		Myclass& operator=(const Myclass& r)
+		{
+			ax = r.ax;
+			bx = r.bx;
+			cx = r.cx;
+			return *this;
+		}
+		
+		Myclass& operator=(Myclass&& r)
+		{
+			ax = std::move(r.ax);
+			bx = std::move(r.bx);
+			cx = std::move(r.cx);
+			return *this;		
+		}
+
+		private:
+			A ax;
+			B bx;
+			C cx;
+	};
+
+
+
+----------------------------------------------------
+
+
+	class Myclass{
+	public:
+	String(const String& other) : mlen(other.mlen)
+	{
+		mp = static_cast<char*>(std::malloc(mlen+1));
+		if (!mp) {
+			std::cerr << "cannot allocate memory\n";
+			std::exit(EXIT_FAILURE);
+		}
+		std::strcpy(mp, other.mp);	
+	}
+
+	String(String && other) : mlen(other.mlen), mp(other.mp)
+	{
+		other.mp = nllptr; // değerini çaldığımız nesnenin pointeri hala bizim aldığımız adresi gösteriyor. destructor ile bizim adresin silinmemesini
+			     	   // sağlamak için mp pointerini nullptr yaptık.
+		other.mlen = 0;	   // bu da gerekli.
+	}
+
+	String& operator=(const String& other)
+	{
+		if(this == &other) // self assignment
+			return *this;
+		mlen = other.mlen;
+		std::free(mp);
+
+		mp = static_cast<char*>(std::malloc(mlen+1));
+		if (!mp) {
+			std::cerr << "cannot allocate memory\n";
+			std::exit(EXIT_FAILURE);
+		}
+		std::strcpy(mp, other.mp);
+
+		return *this;
+	}
+	
+	String& operator=(String&& other) 	// move assignment
+	{
+		if (this == &other)	// self-assignment kontrolü
+			return *this;
+
+		std::free(mp);		// bunu yazmasak kaynak sızıntısı olur
+		mlen = other.mlen;
+		mp = other.mp;
+		// kaynak çalma kısmı tamamlandı, şimdi diğer nesnesyi destroyable bir state sokalım;
+		other.mp = nullptr;
+		other.mlen = 0;
+	
+		return *this;
+	}
+	
+	String(const char* p) : mlen(std::strlen(p))
+	{
+		mp = static_cast<char*>(std::malloc(mlen+1));
+		if (!mp) {
+			std::cerr << "cannot allocate memory\n";
+			std::exit(EXIT_FAILURE);
+		}
+		std::strcpy(mp, other.mp);
+	}
+	
+	~String()
+	{
+		if (mp)
+			std::free(mp);
+	}
+
+	std::size_t length()const
+	{
+		return mlen;
+	}
+	
+	void print()const
+	{
+		std::cout << '[' << mp << "]\n";
+	}	
+
+	private:
+	std::size_t mlen;
+	char* mp;
+
+	};
+
+-----------------------------------------
+
+Elimizde bir L val. kategorisinde bir sınıf nesnesi olmasına rağmen yine de onun kaynağını çalmak istiyoruz. 
+
+int main()
+{
+	std::string str(10000, 'A');
+	
+	std::string sx = str;	// burada sx için cotr çağırılır.
+
+// öyle bir senaryo olsun ki, str'nin hayatının devam ettiğini biliyorum fakat str'yi artık kullanmayacağım dolayısıyla sx'in str'nin kaynağını
+kopyalamasını değil çalmasını istiyorum. std::move() ile bunu yapabiliriz.
+
+	std::string sx = strstd::move(str);
+	// str'nin kaynağını çaldık
+	
+	//moved-from state/object deniyor. Yani nesne hala hayatta fakat kaynağı çalınmış.
+}
+
+
+Bu durumda şu soruyu sormamız gerekiyor: Herhangi bir problem olmaması için böyle durumlarda neler yapabiliriz?
+					 ----------------------------------------------------------------------
+
+1.ihtimal şu olabilir: artık str'yi hiç kullanmayız. Yani str'nin kaynağı çalınmıştır ve ne zaman str'nin destructoru çağırılacak olsa herhangi
+bir sorun olmayacak çünkü onun move cotr ona göre yazılmış. Peki biz str'yi kullanabilir miyiz? 
+- Standard kütüphanenin türleri (std::string, std::vector gibi vs.) ve 3.party kütüphanelerin sınıfları (eğer özel bir durum yoksa) sınıfları 
+kaynağı çalınmış nesneler için tipik olarak şu garantiyi veriyor;
+
+	a) kaynağı çalınmış nesne "in a valid state"
+		Bu ne demek? bir nesnenin valid state'de olması ne demek?
+			-Sınıfın Invariant'ları korunmuş olacak, bozulmayacak. 
+
+	b) nesne destructible. ( destructor'un çağırılması herhangi bir soruna yol açmayacak. )
+	
+Ancak nesnenin değeri garanti altında değil.
+
+Örneğin string std kütüphanenin string sınıfı için biz bir string nesnesinin kaynağını çalsak ve kaynağı çalınmış nesnenin tuttuğu yazıyı bir
+şekilde yazdırsak ve o yazi "fatih"  yazısı olsa(halen fatih yazısını tutuyor). Sınıfın length fonksiyonu string sınıfı nesnesinin tuttuğu 
+yazının uzunluğunu döndürüyor. Bu durumda length fonksiyonunun 5 değerini döndürmesi garanti altında mı?
+- Evet garanti altında. Valid state olması bu demek. Yani sınıf nesnesinin üye fonksiyonları çağırıldığında herhangi bir şekilde problem yok ama
+değerinin ne olduğunu bilmiyoruz.
+
+Invariantları tutması demek: uzunluk değeri gerçekten uzunluk değeri, örneğin string'in tuttuğu boş yazı ise uzunluk değeri 0.
+
+	c) nesneye yeni bir değer atayarak onu tekrar kullanabiliriz.
+
+
+* moved from state'de ki nesnenin değerinin ne olacağı derleyiciye bağlı ancak nesne geçerli bir durumda. Yani o değeri kullanabiliriz. Bu değeri
+kullanmak bir tanımsız davranış değil!***.
+
+
+
+
+valid state'den ne kast ediliyor?
+---------------------------------
+
+int main()
+{
+	using namespace std;
+	
+	string str{"string yazisi"};
+	
+	auto s = move(str);
+
+	cout << str.length() << "\n";		// 0
+
+	if(str.empty())				// buraya girme garantisi var.
+		cout << "evet bos yazi\n";
+
+	cout << "(" << str << ")\n";		// parantezin içinde hiçbir karakter olmayacağı garantisi var.
+
+	str = "string test";			// herhangi bir UB durumu yok.
+
+}	// programın akışı bu noktaya str için destructor çağırılacak mı? - evet. Herhangi bir soruna yol açacak mı? - hayır.
+
+
+Bütün sınıflar bu garantileri vermek zorunda değil fakat standardda böyle.
+
+
+
+
+* Sınıf nesnelerinin ctor ya da copy assignment'i varsa yani sınıf nesnelerinin kopyalanmasında herhangi bir problem yoksa, böyle sınıflara
+copyable sınıflar diyebiliriz. Yani kopyalanmasında herhangi bir engel yok. 
+
+Ancak bazı durumlarda biz sınıf nesnelerinin kopyalanmasını engellemek istiyoruz. Nedeni de kopyalamanın semantik karşılığının olmaması. Yani
+öyle sınıflar var ki problem domainindeki temsil ettikleri kavram için zaten kopyalama ya bir anlam taşımıyor, ya saçma ya da problemli.
+
+Örneğin bir dosyayı kontrol eden sınıf nesnesi düşünelim. Bu nesnenin kopyasının çıkarılması anlamsızdır. İşte böyle durumlarda sınıf için
+kopyalama kapatılıp sentaks hatası haline getiriliyor. Bunu yapmanın da yolu sınıfın kopyalama özel fonksiyonlarını delete etmek.
+
+	class Nec{
+	public:
+		//..
+		Nec();
+		Nec(const Nec&) = delete;		// ctor delete bildirimi
+		Nec& operator=(const Nec&) = delete;	// copy assignment delete bildirimi
+	};
+
+	int main()
+	{
+		Nec x;
+	
+		Nec y(x); // sentaks hatası
+
+		Nec y;
+
+		x = y;	// sentaks hatası
+	}
+
+
+Böyle sınıflardan bahsederken, yani kopyalamaya karşı kapatılmış sınıflardan bahsederken onlara "non-copyable" sınıflar diyoruz.
+Örneğin standard kütüphanede belirli fonksiyonlar non-copyable.
+
+Fakat öyle sınıflar var ki bu sınıflar türünden nesnelerin kopyalanması istenmiyor ancak taşıma semantiğine açık olması isteniyor. Bunlara da
+popüler olarak "move-only class" deniyor. Kopyalaması yok fakat taşıması var.
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+
+Derleyicilerin hangi durumlarda hangi special memberi implicitly declare edeceğini öğrenelim. Bunun için dilin kuralları devreye giriyor. Yani
+derleyiciye/implementasyona bağlı değil direk dilin kuralı olarak sabit.
+
+
+1) Eğer sadece böyle bir bildirim yaparsak;
+	class Myclass{
+	
+	};
+
+  Derleyici tarafından aşağıdaki şekilde special member functionlar declare edilir.
+
+	class Myclass{
+	
+	Myclass() = default;	
+	~Myclass() = default;
+	Myclass(const Myclass&) = default;
+	Myclass(Myclass&&) = default;
+	Myclass& operator=(const Myclass&) = default;
+	Myclass& operator=(Myclass&&) = default;
+
+	};
+
+2) Eğer sınıfa special member function olmayan bir constructor koyarsak sadece ve sadece Myclass() = default; olmaz.
+
+Buradan şu kuralı tekrar edelim: Sınıfa herhangi bir fonksiyonu, special member function olsun veya olmasın, user declared yaptığımız zaman
+derleyici default ctor'u implicitly declare etmez. Aşağıda da örneği var.
+
+	class Myclass{
+		Myclass(int);
+	};
+
+	class Myclass{
+	public:
+		~Myclass() = default;
+		Myclass(const Myclass&) = default;
+		Myclass(Myclass&&) = default;
+		Myclass& operator=(const Myclass&) = default;
+		Myclass& operator=(Myclass&&) = default;
+	};
+
+
+3) Eğer sınıfa user declared default ctor bildirirsek bu durumda yine sınıfın diğer bütün özel üye fonksiyonları derleyici tarafından default
+ediliyor.
+
+	class Myclass{
+		Myclass();
+	};
+	
+
+
+	class Myclass{
+		public:
+		Myclass();
+		~Myclass() = default;
+		Myclass(const Myclass&) = default;
+		Myclass(Myclass&&) = default;
+		Myclass& operator=(const Myclass&) = default;
+		Myclass& operator=(Myclass&&) = default;
+
+	};
+	
+
+4) Eğer sınıfa destructor bildirirsek, destructoru user-declared yapmış oluruz fakat diğer üye fonksiyonların derleyici tarafından yazılmasında
+herhangi bir şekilde engel yok.
+
+// dikkat bu durumda sınıfın move memberları yok. delete edilmiş değil, direk yok.
+
+	class Myclass{
+		~Myclass();
+	};
+
+	class Myclass{
+		public:
+		Myclass();
+		~Myclass() = default;
+		Myclass(const Myclass&) = default; 		// ?
+		Myclass& operator=(const Myclass&) = default;   // ?
+
+	};
+
+*kritik -> User defined destructor bildirdiğimiz zaman, derleyici sınıfın move memberlarını default etmiyor. Yani move memberlar yok.
+*kritik -> derleyici defult ctor'u default ediyor, copy ctor'u ve copy assignmenti yine default ediyor. Fakat bu durum son derece tehlikeli. Asla
+ve asla böyle bir duruma yol açmamamız gerekiyor. Ve standarda göre bu deprecated ilan edildi.
+
+
+4) Copy ctor bildirilmişse; default ctor yok, destructor var default, copy assignment var ve default, move ctor ve move assignment yok.
+	
+	class Myclass{
+		Myclass(const Myclass&);  // copy ctor
+	};
+	
+	class Myclass{
+	public:
+		~Myclass() = default;
+		Myclass(const Myclass&);
+		Myclass& operator=(const Myclass&) = default; //!!!
+	};
+
+
+
+
+5) Copy assignment bildirilmişse; default ctor var ve default , destructor var ve default, copy ctor var ve default, move ctor yok, move 
+assignment yok.
+
+	class Myclass{
+		Myclass& operator=(const Myclass&);	// copy assignment	
+	};
+	
+	class Myclass{
+	public:
+		Myclass() = default;
+		~Myclass() = default;
+		Myclass(const Myclass&) = default;
+		Myclass& operator=(const Myclass &);
+	
+	};
+
+
+6) Sınıfa move ctor yazarsanız; default ctor yok ( çünkü bu zaten bir ctor. neydi kural? bir tane ctor bildirirseniz derleyici default ctor'u 
+bildirmez), destructor var ve default, copy ctor var ama delete edilmiş. Sınıfa move ctor bildirirseniz derleyici copy ctor'u delete ediyor.
+Move ctor zaten user declared, move assignment yok.
+
+
+	class Myclass{
+		Myclass(Myclass &&);
+	};
+	
+	class Myclass{
+	public:
+		~Myclass() = default;
+		Myclass(const Myclass&) = delete;
+		Myclass& operator=(const Myclass&) = delete;
+		Myclass(Myclass&&);
+	};
+
+
+
+
+7) Move assinment yazarsak; default ctor var ve default, destructor var ve default, copy assignment deleted, copy ctor deleted, move ctor yok, move assignment user 
+declared.
+
+
+	class Myclass{
+		Myclass& operator=(Myclass &&); // move assignment
+	};
+
+	class Myclass{
+	public:
+		Myclass() = default;
+		~Myclass() = default;
+		Myclass(const Myclass&) = delete;
+		Myclass& operator=(const Myclass&) = delete;
+		Myclass& operator=(Myclass &&);
+	};
+
+
+
+* Bir sınıfa herhangi (default ctor olmayan) bir ctor bildirirsek derleyici default ctor'u bildirmez. (not declared)
+* Bir sınıfın her zaman destructor'ı vardır. Destructorun olmadığı bir senaryo yok. Biz bildirirseniz user declared, bizim bildirmediğimiz bütün
+durumlarda implicitly declared. 
+* Bir sınıfa eskiden büyük 3'lü (big 3) (destructor, copy assignment, copy ctor) denilen bunlardan hangisini bildirirsek bildirelim, derleyici 
+move memberları bildirmez. Bu durumda sınıfın move memberları yoktur.
+* Bir sınıfa move memberlardan birini bildirirseniz ister move ctor olsun ister move assignment olsun, derleyici copy memberları delete eder.
+
+
+--------------------------------------------
+
+
+
