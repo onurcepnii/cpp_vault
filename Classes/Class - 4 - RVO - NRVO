@@ -1,0 +1,353 @@
+_____________________________________
+
+Temporary Objects ( Geçici Nesneler )
+_____________________________________
+
+Geçici nesne bir PR value expression.
+
+* İsimlendirilmemiş nesneler işinizi görüyorsa, nesnelerinizi isimlendirmeyin. Çünkü bu şekilde kullanacağımız nesnelerin bazı avantajları var.
+
+-Eğer sınıfın ismini yazıp, bir isim olmadan nesne oluşturma ifadesi yazarsak temporary bir nesne oluşturmuş oluruz.
+
+	class Myclass{};
+
+	int main()
+	{
+           Myclass(); // geçici nesne
+	}
+
+///////////////////
+	
+	class Myclass{
+	public:
+		Myclass();
+		Myclass(int);
+		Myclass(int, int);
+	};
+
+	int main()
+	{
+	   Myclass(12,45);	// temporary object 
+	   Myclass{ 12, 45 };	// temporary object
+	}
+
+* Bu ifadenin (Myclass() veya diğer üstteki 2 ifade) value kategorisi PR Value expression. Dolayısıyla böyle bir ifade ile ne yapabilir sorusunun cevabı;
+örneğin bunu başka bir myclass nesnesine ilk değer veren ifade olarak kullanabiliriz.
+
+	auto m = Myclass{};
+
+* Eğer bir fonksiyonun parametresi Myclass türünden ise, böyle bir fonksiyona yapılacak çağrı ifadesinde geçici nesne kullanabiliriz.
+
+	void func(Myclass);
+
+	func(Myclass{});
+
+* Referanslar söz konusu olduğu zaman, bir referansı geçici bir nesneye bağlayabiliriz fakat geçici nesne ifadesi PR value olduğu için, bağlanacak referansın
+da ya const L val. ref. ya da R val. ref. olması gerekiyor.
+
+	Myclass& mr = Myclass{}; 	// sentaks hatası, r val expr, l val exp bağalanamaz.
+	Myclass&& mr = Myclass{}; 	// sorun yok
+	const Myclass& mr = Myclass{};	// sorun yok
+
+
+
+-------------------------
+Neden Kullanacağız?
+-------------------------
+
+Örneğin bizim bir fonksiyon çağrısında kullanılacak bir argümana ihtiyacımız var ancak amacımız sadece orada kullanılması. 
+
+	void func(Myclass);
+	
+	int main()
+	{
+		Myclass m{ 3, 4 };
+
+		func(m);
+	}
+
+böyle yazarsak;
+
+	1) İsim alanına bir isim enjekte etmiş olduk.
+	2) Kodu okuyanda buradaki Myclass nesnesinin fonksiyon çağrısından sonra tekrar kullanılacağı konusunda bir algı oluşturmuş olduk.
+	3) Bu Myclass nesnesinin hayatı local otomatik ömürlü bir değişken olduğu için, tanımlandığı bloğun sonunda bitecek. Oysa bu nesneye sadece 
+	bu iş için ihtiyacımız varsa, bu noktadan sonra hayatının devam etmesi özellikle de bu nesne kaynaklar kullanıyorsa istediğimiz bir durum değil.
+
+
+|Temporary Materializetion|
+---------------------------
+* Bir PR Value expression Modern C++17 standardıyla, artık kendisi doğrudan bir nesne değil. Adeta şöyle; bir nesnenin oluşturulması için bir reçete, talimat
+gibi. Yeni standard diyor ki, yeri geldiğinde-zamanı geldiğinde bu ifadeden bir nesne oluşturulabilir. İşte bunun teknik olarak karşılığı da "Temporary Materializetion".
+
+Bir PR Value expression'un adeta hedefini bulduğunda bir nesne haline gelmesi/ondan bir nesne oluşturulmasıdır Temporary Materielization.
+
+Temporary Materializetion'un olduğu durumları basitçe ifade etmek gerekirse;
+
+1) Bir referansa bağlamak.
+
+	auto &&r = Myclass { 3,5 };
+
+	const &r = Myclass { 3,5 };
+	
+Burada materialization gerçekleştirilir.
+
+2) Referans değil de bu ifadeden bir nesne oluşturursak yine temp. materializetion gerçekleştirilir.
+
+	Myclass m = Myclass{ 3, 5 }; // burada bir kez iki int parametreli cotr (Myclass(int, int)) çağırılacak.
+	//yanlış algıya düşmeyelim. Burada derleyici önce iki int parametreli cotr çağırıp daha sonra move veya copy ctor çağırmaz.
+
+
+"Mandatory Copy Ellision" = "Guaranteed Copy Ellision"
+Bir PR Value expression'Un Materyalize olmadan kullanılması durumuna  Mandatory Copy Ellision deniyor.
+
+	Myclass m = Myclass{ Myclass{} };	// burada copy ctor çağırılmayacak yeni standardlara göre, çünkü zaten burada nesne yok ki. Bunlar nesne
+						// reçetesi olarak geçiyor. Sadece ctor çağırılır.
+	// cpp17 öncesi için : derleyici burada optimizasyon yapar, fakat eğer copy ctor delete edilmiş olursa sentaks hatası olur.
+
+-------- Ayrıntı açıklama -----------------------
+MyClass{} ifadesi ile geçici (temporary) bir MyClass nesnesi oluşturulur.
+MyClass{ MyClass{} } ifadesinde, geçici MyClass{} nesnesi, dıştaki MyClass nesnesine kopyalanır veya taşınır (constructor ile).
+Dıştaki MyClass nesnesi m değişkenine atanır, burada da bir kopyalama veya taşıma işlemi gerçekleşir.
+
+Bu işlem normalde iki kez kopyalama veya taşıma gerektirebilir:
+-İlk geçici nesne dıştaki MyClass nesnesine.
+-Dıştaki MyClass nesnesi m'ye atanır.
+
+C++11 ve C++14'te, derleyiciler copy elision (özellikle Return Value Optimization, RVO) adı verilen bir optimizasyon tekniği kullanarak bazı geçici nesnelerin kopyalanmasını 
+veya taşınmasını atlayabilir. 
+
+Eğer derleyici MyClass{ MyClass{} } için copy elision uygularsa:
+-İlk geçici nesne doğrudan m olarak materyalize edilebilir.
+-Böylece ekstra kopya veya taşıma işlemlerini atlamış olur.
+
+C++17'de, bu tür ifadeler için copy elision zorunlu hale getirilmiştir. Bu durumda:
+
+Derleyici, MyClass{ MyClass{} } ifadesinde geçici nesneyi m değişkenine doğrudan taşıyacak veya kopyalayacaktır; hiçbir kopyalama veya taşıma işlemi yapılmaz.
+
+-----------------------------------------------
+
+
+Myclass m = Myclass{ Myclass{} };	// aslında burada C++17'ye göre zaten bir nesne yok (sağ taraf kast ediliyor). Burada bir PR Value expression var. Ve dilin kurallarına
+					// göre (17 ve üstü) nesne ne zaman oluşacak? Temporary Materializetion oluşacağı zaman nesne oluşacak. Dolayısıyla PR Value expr.
+					// doğrudan nesne kabul edilmiyor, hedefini bulduğu zaman nesne haline geliyor. Bu kural olduğu için ctor delete edilse dahi bir sentaks
+					// hatası oluşmayacak. 
+
+
+------------------------------------------------------
+
+
+*  Temporary Objectlerin en büyük avantajlarından birisi de bunun doğrudan nesne olmaması ve bazı senaryolarda copy ellision dediğimiz sonucu doğurması.
+
+________________________________
+
+	Copy Ellision
+________________________________
+
+* C++'da son derece önemli, yazdığımız kodun verimini %100 arttırabilecek bir durum. Kullanma biçimimize bağlı olarak.
+
+Copy Ellision demek aslında kopyalamanın yapılmaması demek. 
+
+
+
+
+1.tipik örnek geçici nesne ifadesini, başka bir geçici nesne ifadesi oluştururken argüman olarak kullanmak.
+
+	Myclass m = Myclass{ Myclass{ Myclass{} } }; // birden fazla da olabilir böyle
+						     // copy ctor çağırılmaz sadece ctor çağırılır.
+
+2.örnek, bir temporary object-prvalue expr. ile sınıf türünden argüman alan fonksiyona çağrı yapmak.
+
+	void func(Myclass);
+	
+	func(Myclass{});	// eski cpp'a göre önce default ctor çağırılır, sonra copy ctor çağırılır ve çok büyük ihtimalle %99 derleyici bunu optimize edecekti
+				// şuan default ctor çağırılır sadece.
+
+ 	Bu neden önemli bazı sınıf nesnelerinin contruction'u çok ciddi bir maliyet, yani biz doğrudan kopyalama maliyetinden kurtulmuş oluyoruz.
+
+	Hatta bu kural olmasaydı, bir fonksiyona myclass pr value ifade gönderiyoruz ve burada normalde Move Ctor çağırılırdı. Fakat bu kural ile o çağırılmıyor.
+
+
+* C++17' de radikal bir değişiklik yapıldı.
+
+
+
+* Bir fonksiyonun geri dönüş değeri türünün Myclass sınıfı türünden olması ve fonksiyonun return ifadesinin Myclass türünden bir PR Value expr. olması C++17
+öncesi söz konusu olsaydı,
+
+	Myclass m = func(); // bir kez ctor çağırılır fakat bu bir compiler optimization. eğer optimizasyon switchlerini disable ederseniz o zaman copy ctor'Un
+				çağırıldığını göreceksiniz. fakat optimizasyon ayarlarını açsanız veya kapatsanız da eğer copy ctor deleted ise sentaks hatası
+				göreceksiniz.
+
+	Fakat C++17 ve sonrasında burada bir kopyalama yok, temporary materializetion var.
+
+
+
+----------------------
+
+	ÖZETLE
+
+----------------------
+
+C++ 17'den önceki standardlarda eğer şöyle bir ifade yazarsak;
+	
+	Myclass m = Myclass{}; veya Myclass m = Myclass{ Myclass {} }; // bu kodlarda çok büyük ihtimalle derleyici optimizasyon yapacak ve ctor çağırılacak.
+									// copy ctor çağırılmayacak.
+
+	Fakat eğer copy ctor deleted ise, derleyici optimizasyon yapsa da yapmasa da sentaks hatası verecek.
+
+
+C++ 17 ve sonraki standardlar için ise bu kodda sadece ctor çağırılacak. Temporary Materialization var, kopyalama yok.
+
+Hatta burada da problem yok;
+	Myclass m = Myclass { Myclass{ func() } };
+
+----------------------
+
+Mandatory Copy Ellision ya da Guaranteed Copy Ellision C++17 standardının bir eseri. Ancak copy ellision, guaranteed copy ellision'un üstünde bir terim.
+
+Bir de garanti altında olmayan copy ellision var.
+
+---
+RVO ( Unnamed )
+---
+* Bir fonksiyonun geri dönüş değerinin bir sınıf türünden olması ve fonksiyonun geri dönüş değerini oluştuacak olan return statement'ta bir PR Value Expr. 
+kullanılması durumuna karşılık geren terim " Return Value Optimization ". ==> RVO
+
+RVO'nun bu biçimi, C++17 öncesinde bir compiler optimization'du, fakat artık direk dilin kuralı. Yani derleyici artık burada copy cotr delete edilmiş ben sentaks hatası
+veriyorum diyemiyor. Veya burada ben copy yapacağım diyemiyor artık dilin kuralı burada kopyalanma durumu engellenmiş.
+
+	Myclass func()
+	{
+		return Myclass();
+	}
+
+Aslında return value optimization 2 kategoriye ayrılı diyebiliriz;
+-isimlendirilmemiş, unnamed (URVO)	=> Mandatory
+-isimlendirilmiş, named (NRVO)	=> Not Mandatory
+
+----
+NRVO ( Named RVO )
+----
+Halen compiler optimization, mandatory değil. Fakat derleyicilerin çok kolayca yapabildiği bir compiler optimization. Kod verimini çok arttırır.
+ 
+	class Myclass{
+	public:
+
+		Myclass()
+		{
+			std::cout << "default cotr \n";
+		}
+
+		~Myclass()
+		{
+			std::cout << "destructor \n";
+		}
+
+		Myclass(const Myclass&)
+		{
+			std::cout << "copy ctor\n";
+		}
+		
+		Myclass(Myclass&&)
+		{
+			std::cout << "move ctor \n";
+		}
+	};
+	
+	Myclass func()
+	{
+		Myclass x; // 1
+		// bu yerel nesne (x) üzerinde bir takım işlemler yapıp fonksiyona çağrı yapan koda iletmek için o yerel nesneyi return ifadesi olarak kullanıyoruz.
+		return x;
+	}
+
+	int main()
+	{
+		Myclass m = func(); 
+	}
+
+
+* Aslında teorik olarak önce func() fonksiyonu çağırıldığında 1 numaralı nesne için default ctor çağırılacak fakat fonksiyon çağırı tamamlandığı anda fonksiyonun geri dönüş
+değerini m isimli nesneye kopyaladığımızda 1 veya 2 kez copy ctor çağırılacak. Neden 1 veya 2 dedik? - Çünkü aslında böyle durumda fonksiyonun geri dönüş değerini bellekte
+bir yere yazıyoruz. Dolayısıyla orada da bir nesne oluşuyor. O nesne de bir temp. object ve o nesne copy ctor ile hayata geliyor. Daha sonra o nesneden yine cop ctor ile
+m isimli nesneyi oluşturuyoruz.
+
+Burada derleyicinin aslında ürettiği kod; doğrudan myclass nesnesini fonksiyonun geri dönüş değerinin yazılacağı yerde(return slot) oluşturması. Bu guaranteed
+copy ellision değil.
+
+* Guaranteed copy ellision değil yani eğer copy ctor delete edilmiş olsa ve derleyici optimizasyon yapmasa sentaks hatası olur.
+
+örnek:
+
+class Myclass{
+public:
+	Myclass()
+	{
+		std::cout << "default constructor \n";
+	}
+
+	Myclass(const Myclass&) = delete;
+};
+
+using namespace std;
+
+vector<int> foo()
+{
+vector<int> vx(100'000);
+///...
+
+return vx;
+}
+
+int main()
+{
+	auto vec = foo();
+}
+
+burada 2 ihtimal var; 1) derleyicinin yapmasını engelleyeceği özel bir senaryo yok ise, move ctor çağırılacak.
+
+
+--------------------------------------------------------------
+
+R value			
+_______
+
+X Value U PR Value
+
+
+GL Value
+________
+
+L Value U X Value
+
+
+
+------------------------------------------
+
+
+
+class Myclass{
+		Myclass()
+		{
+			std::cout << "default cotr";
+		}
+		~Myclass()
+		{
+			std::cout << "destructor";
+		}
+	};
+
+
+int main()
+{
+	Myclass{}; // default ctor çağırılır. Temporary Materialization noktalarından birisi de, bir PR Value expression'un initializer olmadan kullanılması
+			// fakat ifadenin sonunda destructor çağırılması durumu.
+
+	std::cout << "main bitiyor";
+}
+
+burada yazılar şu sırayla bastırılır:	"default ctor" -> "destructor" -> "main bitiyor" 
+
+
+
+
