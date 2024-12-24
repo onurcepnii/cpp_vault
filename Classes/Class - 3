@@ -569,6 +569,9 @@ oluşturacaksa o halde sentaks hatası olacak.
 bu kod da sentaks hatası olur. Çünkü Erg e; ile Erg sınıfına ait bir nesneyi default initialize ediyoruz ve böyle init. ettiğimiz için 
 o nesnenin default constructoru olması gerekiyor. Fakat default constructor yok. Bu yüzden hata.
 
+***
+Eğer parametreli veya parametresiz bir constructor declare edilmiş ise kullanıcı tarafından, derleyici default constructor yazmaz. Yukarıda olan da budur.
+
 
 *Eğer bir sınıfın default constructorunda ya da herhangi bir constructorunda bir veri elemanını constrcutor initializer list ile 
 initialize etmezsek derleyici oraya onun default initializ edildiği kodu ekliyor. Bu durumda default initialize edilmesi sentaks hatası
