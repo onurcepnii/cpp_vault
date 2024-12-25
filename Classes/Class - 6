@@ -722,7 +722,7 @@ Operator fonksiyonlarının (bir iki istisna olabilir) return değerini discard 
  Bir operatörü overload etmek istiyorum. Global mi olsun Member mi olsun?
  - Bu sorunun net bir cevabı yok. Fakat birçok kişinin uyduğu ilke şöyle;
 
- 	*Simetrik operatörleri global operatör fonksiyon yapmak. 
+ 	*Simetrik operatörleri global operatör fonksiyon yapmak.  ==> çünkü member operator function ile bu işlemi yapamayız! sadece global operator function ile yapabiliriz.
  	Simetrik burada ne anlama geliyor?;
 
  		x bir sınıf nesnesi olsun, eğer ( x + y ) ile ( y + x ) aynı işleme karşılık geliyorsa, aynı soyutlama ise (aynı değeri
