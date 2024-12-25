@@ -454,8 +454,8 @@ NOT-DİKKAT
 		cout << dval << '\n';	// aslında bu bitsel sola kaydırma operatörü
 
 		cout.operator<< (x);
-		operator<<(cout.operator(x), '\n');	// aslında böyle
-		operator<<(cout.operator(dval), '\n');	// aslında böyle
+		operator<<(operator<<(cout, x), '\n');	// aslında böyle
+		operator<<(operator<<(cout, dval), '\n');	// aslında böyle
 
 		// burada da operator overloading var. 
 		// cout bir global sınıf türünden bir nesne, bu sınıfın ismi ostream. Biz ostream sınıfının operator<<() fonksiyonuna x'i
