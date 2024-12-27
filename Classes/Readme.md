@@ -49,6 +49,6 @@
 [DDD - Dreadful(deathful) Diamond of Derivation](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Inheritence/Inheritence%20-%204#L327)\
 [Runtime Type Identification](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Inheritence/Inheritence%20-%204#L710)\
 [Dynamic Cast Operator](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Inheritence/Inheritence%20-%205#L3)\
-[Typeid Operator](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Inheritence/Inheritence%20-%205#L296)\
+[Typeid Operator](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Inheritence/Inheritence%20-%205#L296)
 
 
