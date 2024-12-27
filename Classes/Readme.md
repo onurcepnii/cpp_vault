@@ -1,4 +1,4 @@
-# İçindekiler
+# Alt Başlıklar
 
 ### Classes
 [Member Function](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Class%20-%202)\
