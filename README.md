@@ -22,5 +22,5 @@
 [Functional Type Cast](https://github.com/onurcepnii/cpp_vault/blob/main/Type%20Casting#L134)\
 [Classes](https://github.com/onurcepnii/cpp_vault/tree/main/Classes) >>\
 [Inheritence](https://github.com/onurcepnii/cpp_vault/tree/main/Classes/Inheritence)>>\
-[Exception Handling]()>>\
-[Generic Programming]()>>
+[Exception Handling](https://github.com/onurcepnii/cpp_vault/tree/main/Exception%20Handling)>>\
+[Generic Programming](https://github.com/onurcepnii/cpp_vault/tree/main/Generic%20Programming)>>
