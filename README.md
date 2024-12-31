@@ -20,6 +20,7 @@
 [Contractual Constness](https://github.com/onurcepnii/cpp_vault/blob/main/Type%20Casting#L46)\
 [Reinterpret Cast](https://github.com/onurcepnii/cpp_vault/blob/main/Type%20Casting#L86)\
 [Functional Type Cast](https://github.com/onurcepnii/cpp_vault/blob/main/Type%20Casting#L134)\
-[Classes](https://github.com/onurcepnii/cpp_vault/tree/main/Classes) |\
-[Inheritence](https://github.com/onurcepnii/cpp_vault/tree/main/Classes/Inheritence)|\
-[Exception Handling]()|\
+[Classes](https://github.com/onurcepnii/cpp_vault/tree/main/Classes) |>>\
+[Inheritence](https://github.com/onurcepnii/cpp_vault/tree/main/Classes/Inheritence)|>>\
+[Exception Handling]()|>>\
+[Generic Programming]()|>>
