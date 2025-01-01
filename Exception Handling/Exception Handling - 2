@@ -529,8 +529,18 @@ p3 nesnesi hayattaydı. exception gönderildi fakat yakalanamadı ve bu nesneler
 
 ama exception'u yakalarsak otomatik ömürlü nesneler programın akışı exception'u handle eden catch bloğuna girmeden, stack frame'lerde teker teker yani son oluşturulan 
 ilk destroy edilecek şekilde destructorları çağırılıyor. bu sürece verilen bir isim var: "Stack Unwinding".
+											  ---------------
+-------------------------------
+	Stack Unwinding
+-------------------------------
 
-//Stack Unwinding
+(chat-gpt)
+
+C++'da stack unwinding, bir exception (istisna) fırlatıldığında, stack üzerindeki yerel (local) nesnelerin sırasıyla ve otomatik olarak destructor'larının çağrılarak 
+kaynaklarının serbest bırakıldığı süreçtir. Bu işlem, exception bir catch bloğu tarafından yakalanana kadar devam eder.
+
+Ancak, exception yakalanamazsa (örneğin, uygun bir catch yoksa), program std::terminate çağırır ve stack unwinding durur.
+Bu durumda, stack üzerindeki nesnelerin destructor'larının çağrılacağı garanti edilmez ve program aniden sonlanır (abort).
 
 		#include <iostream>
 		#include <exception>
