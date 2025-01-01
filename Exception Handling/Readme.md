@@ -8,6 +8,7 @@
 [Strong Guarantee](https://github.com/onurcepnii/cpp_vault/blob/main/Exception%20Handling/Exception%20Handling%20-%202#L384)\
 [Nothrow\Nofail](https://github.com/onurcepnii/cpp_vault/blob/main/Exception%20Handling/Exception%20Handling%20-%202#L408)\
 [Stack Unwinding](https://github.com/onurcepnii/cpp_vault/blob/main/Exception%20Handling/Exception%20Handling%20-%202#L533)\
+[Function Try Block](https://github.com/onurcepnii/cpp_vault/blob/main/Exception%20Handling/Exception%20Handling%20-%202#L933)\
 [Noexcept Specifier](https://github.com/onurcepnii/cpp_vault/blob/main/Exception%20Handling/Exception%20Handling%20-%202#L1138)\
 [Noexcept Operator](https://github.com/onurcepnii/cpp_vault/blob/main/Exception%20Handling/Exception%20Handling%20-%202#L1186)\
 [Violating Noexcept](https://github.com/onurcepnii/cpp_vault/blob/main/Exception%20Handling/Exception%20Handling%20-%202#L1351)\
