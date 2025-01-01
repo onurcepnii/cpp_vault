@@ -253,6 +253,8 @@ bu şekilde yazabiliyoruz;
 
 
 ------------------------------
+	** ÖNEMLİ **
+------------------------------
 
 	#include <string>
 	#include <iostream>
