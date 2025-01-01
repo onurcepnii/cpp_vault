@@ -15,4 +15,5 @@
 [Violating Noexcept](https://github.com/onurcepnii/cpp_vault/blob/main/Exception%20Handling/Exception%20Handling%20-%202#L1351)\
 [Polymorphic Exception](https://github.com/onurcepnii/cpp_vault/blob/main/Exception%20Handling/Exception%20Handling%20-%203#L388)\
 [Polymorphic Exception Idioms](https://github.com/onurcepnii/cpp_vault/blob/main/Exception%20Handling/Exception%20Handling%20-%203#L443)\
+[Exception Dispatcher Idiom](https://github.com/onurcepnii/cpp_vault/blob/main/Exception%20Handling/Exception%20Handling%20-%203#L550)\
 [Nested Exception](https://github.com/onurcepnii/cpp_vault/blob/main/Exception%20Handling/Exception%20Handling%20-%203#L614)
