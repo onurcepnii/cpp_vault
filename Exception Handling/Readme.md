@@ -1,4 +1,5 @@
 # Exception Handling
+[Narrow Contract - Wide/Broad Contract](https://github.com/onurcepnii/cpp_vault/blob/main/Exception%20Handling/Exception%20Handling%20-%201#L45)\
 [Error Handling](https://github.com/onurcepnii/cpp_vault/blob/main/Exception%20Handling/Exception%20Handling%20-%201#L95)\
 [Traditional Error Handling](https://github.com/onurcepnii/cpp_vault/blob/main/Exception%20Handling/Exception%20Handling%20-%201#L108)\
 [Exception Handling](https://github.com/onurcepnii/cpp_vault/blob/main/Exception%20Handling/Exception%20Handling%20-%201#L146)\
