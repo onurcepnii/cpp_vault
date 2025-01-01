@@ -1115,6 +1115,18 @@ Burada biz member'da oluşan exception'u yakaladık o zaman exception yakalandı
 dolayısıyla function try bloğunu izleyen catch bloğunun sonunda, siz kendiniz rethrow etmezseniz ya da translate etmezseniz ya da kendiniz buraya terminate gibi bir 
 fonksiyonu çağırmazsanız exception rethrow ediliyor.
 
+-----------------------
+Toparlanmış Hali - Özet
+-----------------------
+Diyelim ki iki tane sınıfımız var; A ve B. B sınıfının memberlarından birisi A sınıfı türünden. 
+B sınıfından bir nesne construct ederken daha constructor bloğuna girmeden sınıfın memberları initialize edilecek. Fakat bu memberlar da A sınıfı türünden ve eğer
+A sınıfı türünden nesne oluştururken o nesnenin constructor'u exception throw ederse biz bunu function try block ile yakalayabiliriz. Çünkü function try block constructor
+initializer list'i de kapsıyor. Eğer function try block kullanmaz ve B sınıfının constructorunun içine normal try catch kodları yazarsak zaten programın döngüsü oraya geldiğinde
+memberlar init. edilmiş oluyor. Yani programın döngüsü henüz oraya gelmeden abort edilecek. çünkü exception throw etti ve yakalanamadı bundan dolayı terminate ve dolayısıyla 
+abort() fonksiyonu çağırıldı.
+
+İşte kısaca bu durumun önüne geçmek için B sınıfının constructor'unu function try block kullanarak yazarız ve bu sayede member'ların initialize edildiği kısmı da try block içine
+almış oluruz.
 
 -----------------------------------------
 
