@@ -1326,7 +1326,7 @@ ama şimdi bakalım:
 
 		class Myclass{
 		public:
-				Member();
+				Myclass();
 
 		private:
 				Member mx;
