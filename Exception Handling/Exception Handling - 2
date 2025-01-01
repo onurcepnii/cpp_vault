@@ -524,7 +524,7 @@ exception gönderildi, exception yakalanmadı. peki bu nesnelerin dtorları ça�
 exception yakalamanın en önemli taraflarından birisi de;
 otomatik ömürlü sınıf nesneleri call chain içinde exception gönderilene kadar farkli fonksiyonlarda oluşturulmuş olabilir.
 
-baz içinde exception gönderildiği zaman foo'da oluşturulmuş p1 nesnesi, bar'ın stack frame'in(içinde yani, foo ile aynı) de oluşturulmuş p2 nesnesi ve baz'da oluşturulmuş 
+baz içinde exception gönderildiği zaman foo'da oluşturulmuş p1 nesnesi, bar'ın stack frame'in(bar'ın içinde yani) de oluşturulmuş p2 nesnesi ve baz'da oluşturulmuş 
 p3 nesnesi hayattaydı. exception gönderildi fakat yakalanamadı ve bu nesnelerin destroy edilme garantisi yok.
 
 ama exception'u yakalarsak otomatik ömürlü nesneler programın akışı exception'u handle eden catch bloğuna girmeden, stack frame'lerde teker teker yani son oluşturulan 
