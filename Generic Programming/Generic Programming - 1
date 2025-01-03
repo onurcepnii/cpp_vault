@@ -59,7 +59,8 @@ Angular Brackets'in içinde tanıtılan isimlere o template'in parametreleri den
 Temp parametreleri farklı kategorilerde olabiliyor. 3 tane farklı kategori var.
 
 -Type Parameter
-	Type parametre adı üzerinde bir türe karşılık geliyor. Yani derleyici template'imizden faydalanarak bir specialization oluşturduğunda, type parametre yerine bir type kullanıyor. örneğin int, double, char gibi vs.
+	Type parametre adı üzerinde bir türe karşılık geliyor. Yani derleyici template'imizden faydalanarak bir specialization oluşturduğunda, type parametre yerine bir type 
+	kullanıyor. örneğin int, double, char gibi vs.
 
 -Non-Type Parameter
 	Adı üzerinde tür olmayan bir parametre. Bir sabit veya belirli bir türden değer gibi. Kendisi bir tür değil ama bir türden değere karşılık geliyor.
@@ -79,7 +80,9 @@ template <typename T>
 
 class keyword kullanmamız ile typename keyword kullanmamız arasında hiçbir fark yok bu bağlamda.
 
-class keyword'un belki bir dezavantajı şu, sanki bu template parametresi karşılığı derleyicinin kullanacağı türe, ona da template argümanı deniyor, sanki bir class type olma zorunluluğu varmış gibi çağrışım oluşturuyor. Oysa derleyicinin specialization için yazacağı kodda T karşılığı kullanılan template argümanı primitive bir tür olabilir. Örneğin T için int veya double kullanılabilir vs.
+class keyword'un belki bir dezavantajı şu, sanki bu template parametresi karşılığı derleyicinin kullanacağı türe, ona da template argümanı deniyor, sanki bir class type olma 
+zorunluluğu varmış gibi çağrışım oluşturuyor. Oysa derleyicinin specialization için yazacağı kodda T karşılığı kullanılan template argümanı primitive bir tür olabilir. 
+Örneğin T için int veya double kullanılabilir vs.
 
 ***
 typename keyword'un kullanıldığı bir başka bağlam daha var. o bağlamda typename'in yerine class kullanamıyoruz.
@@ -93,7 +96,8 @@ Eğer template içinde parametreleri kullanmayacaksak isim vermek zorunda değil
 	template <typename, typename>
 
 
-Tipik olarak konvensiyonel bazı isimler kullanılıyor: T, U, V, W gibi isimler çok yaygın. Ya da bazı özel template parametreler için, onların hizmet ettiği türlere çağrışım yapsın diye iter, fn gibi isimler de kullanılıyor.
+Tipik olarak konvensiyonel bazı isimler kullanılıyor: T, U, V, W gibi isimler çok yaygın. Ya da bazı özel template parametreler için, onların hizmet ettiği türlere çağrışım 
+yapsın diye iter, fn gibi isimler de kullanılıyor.
 
 
 bu 1.kategoriydi.
@@ -109,7 +113,8 @@ Non-type parametre bir değere karşılık geldiği için, typename ya da class 
 
 	};
 
-Yani bu şu demek, derleyici bizim için bu şablondan bir kod ürettiğinde template non-type parametresi karşılığı bu türden bir değer kullanacak. Örneğin biz 10 değerini seçmiş isek, derleyicinin yazdığı sınıf kodunda benim x'i kullandığım yerde 10 sabiti kullanılacak.
+Yani bu şu demek, derleyici bizim için bu şablondan bir kod ürettiğinde template non-type parametresi karşılığı bu türden bir değer kullanacak. Örneğin biz 10 değerini seçmiş 
+isek, derleyicinin yazdığı sınıf kodunda benim x'i kullandığım yerde 10 sabiti kullanılacak.
 
 Aynı template içide hem type parametre hem non-type parametre olabilir.
 
@@ -128,13 +133,16 @@ Madem derleyici bir template koddan bir spzecialization oluştururken template'i
 
 Kısaca derleyici template parametreleri için kullanılan argümanların neler olacağını nasıl bilecek?
 
-- Bunun için farklı farklı araçlar var. Bu araçlardan biri "deduction". Derleyici koda bakarak siz template parametresi karşılığı hangi argümanın kullanılacağını söylemesek de koda bakarak derleyici bunun çıkarımını yapabiliyor.(deduction)
+- Bunun için farklı farklı araçlar var. Bu araçlardan biri "deduction". Derleyici koda bakarak siz template parametresi karşılığı hangi argümanın kullanılacağını söylemesek 
+de koda bakarak derleyici bunun çıkarımını yapabiliyor.(deduction)
 
-- İkinci yol, template parametreleri karşılığı kullanılacak template argümanlarının explicit olarak derleyiciye bildirilmesi. (Yani belirli bir sentaksla adeta derleyiciye diyeceğiz ki: derleyici ben senin çıkarım yapmanı istemiyorum, template parametreleri karşılığı şu türü ya da şu değeri vs. kullanabilirsin. diyoruz.)
+- İkinci yol, template parametreleri karşılığı kullanılacak template argümanlarının explicit olarak derleyiciye bildirilmesi. (Yani belirli bir sentaksla adeta derleyiciye 
+diyeceğiz ki: derleyici ben senin çıkarım yapmanı istemiyorum, template parametreleri karşılığı şu türü ya da şu değeri vs. kullanabilirsin. diyoruz.)
 
 C++17 den önce deduction mekanizması sadece fonksiyon şablonları için söz konusuydu, yani sınıf şablonları için deduction söz konusu değildi.
 
-CTAD ( Class Template Argument Deduction) belirli sınırlar dahilinde sınıf şablonlarında da template parametrelere karşılık gelen template argümanlarının çıkarımı yapılması olanağı kazandırıldı.
+CTAD ( Class Template Argument Deduction) belirli sınırlar dahilinde sınıf şablonlarında da template parametrelere karşılık gelen template argümanlarının çıkarımı yapılması 
+olanağı kazandırıldı.
 
 
 
