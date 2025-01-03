@@ -823,7 +823,7 @@ Fonksiyon şablonlarında kullanılan birkaç tane tipik yapı var.
 
 		//geri dönüş değeri U olsaydı evet bu veri kaybı olmayacak fakat bu sefer argümanların yeri değişse yine veri kaybı olacak.
 	}
-
+*** ÖNEMLİ
 Bu tür durumlarda kullanılan farklı farklı yapılar var. Bir tanesi:
 	fonksiyon şablonuna bir parametre daha koyarız, fonksiyonun geri dönüş değeri bu parametre türünden olur.
 
