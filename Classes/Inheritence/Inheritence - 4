@@ -569,7 +569,7 @@ Daha önceki bahsettiğimiz ambiguity durumları bu kullanımda sentaks hatası/
 
 	class EDevice {
 	public:
-		virtual ~EDevice = default;
+		virtual ~EDevice() = default;
 
 		bool is_on()const
 		{
@@ -584,7 +584,7 @@ Daha önceki bahsettiğimiz ambiguity durumları bu kullanımda sentaks hatası/
 		
 		void turn_off()
 		{
-			m_flag = off;
+			m_flag = false;
 			std::cout << "cihaz kapatildi.\n";
 		}
 
@@ -607,7 +607,7 @@ Daha önceki bahsettiğimiz ambiguity durumları bu kullanımda sentaks hatası/
 
 	class Scanner : virtual public EDevice {
 	public:
-		void print()
+		void scan()
 		{
 			if(!is_on()) {
 				std::cout << "cihaz kapali oldugundan scan islemi yapilamiyor.\n";
@@ -616,7 +616,7 @@ Daha önceki bahsettiğimiz ambiguity durumları bu kullanımda sentaks hatası/
 				std::cout << "scan islemi tamamlandi.\n";
 			}
 		}
-	}
+	};
 
 	class Combo : public Printer, public Scanner {
 	};
