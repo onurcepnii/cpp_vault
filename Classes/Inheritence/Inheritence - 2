@@ -774,7 +774,7 @@ Ancak bunu override eden fonksiyon ilgili türemiş sınıfın private fonksiyon
 	public:
 		virtual void foo(int x = 77) override
 		{
-				std::cout << "Base::foo(int x) x = " << x << "\n";
+				std::cout << "Der::foo(int x) x = " << x << "\n";
 		}
 	};
 
