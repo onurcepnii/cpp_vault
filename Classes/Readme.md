@@ -28,7 +28,8 @@
 [Pimpl Idiom](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Class%20-10#L253)\
 [Composition](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Class%20-10#L253)\
 [Strings](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Class%20-%2011%20-%20Strings#L4)\
-[Small String Optimization](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Class%20-%2011%20-%20Strings#L102)
+[Small String Optimization](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Class%20-%2011%20-%20Strings#L102)\
+[Association - Aggregation - Composition](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Class%20-10#L292)
 
 
 ### Inheritence / Kalıtım
