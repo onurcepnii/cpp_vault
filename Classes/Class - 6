@@ -125,10 +125,14 @@ hatası olarak değerlendirmeyecek.
 
 Friend fonksiyonlarını doğrudan sınıfın içinde tanımlayabiliriz. 
 
+int foo(int);
+
 class Myclass{
 	public:
-		friend int foo(int);	// friend fonksiyonu, ayrıca implicitly inline, zaten sınıf içinde tanımlandığı için
-
+		friend int foo(int)	// friend fonksiyonu, ayrıca implicitly inline, zaten sınıf içinde tanımlandığı için
+		{
+			// function code here
+		}
 	private:
 		int mx;
 		void bar();
