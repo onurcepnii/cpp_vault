@@ -15,6 +15,7 @@
 [Explicit Constructor](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Class%20-%205#L237)\
 [Delegating Constructor](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Class%20-%205#L464)\
 [Friend Declarations](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Class%20-%206#L5)\
+[Hidden Friends Idiom](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Class%20-%206#L124)\
 [Operator Overloading](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Class%20-%206#L231)\
 [Dinamik Ömürlü Nesneler](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Class%20-%208#L4)\
 [Static Members & Static Functions](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Class%20-%208#L159)\
