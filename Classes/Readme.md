@@ -8,6 +8,7 @@
 [Constructor Initializer List](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Class%20-%203#L463)\
 [Default Member Initializer](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Class%20-%203#L699)\
 [Complete Type | Incomplete Type](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Class%20-%203#L699)\
+[Shallow/Memberwise Copy | Deep Copy](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Class%20-%203#L1306)\
 [Temporary Objects](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Class%20-%204%20-%20RVO%20-%20NRVO#L3)\
 [Copy Ellision | RVO - NRVO](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Class%20-%204%20-%20RVO%20-%20NRVO#L143)\
 [Conversion Constructor](https://github.com/onurcepnii/cpp_vault/blob/main/Classes/Class%20-%204%20-%20RVO%20-%20NRVO#L143)\
