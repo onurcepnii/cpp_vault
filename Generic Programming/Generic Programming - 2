@@ -456,8 +456,8 @@ x bir int türündedir, dolayısıyla &x kullanarak bir int* işaretçi elde edi
 		func(ptr);	// sentaks hatası, çünkü ptr int*
 	}
 
-
-//////////////////
+		****************
+//////////	ÇOK ÖNEMLİ KISIM	//////////
 
 	template <typename T>
 	void func(T);
@@ -481,7 +481,7 @@ Fakat dikkat edelim eğer fonksiyonda void func(T *) olsaydı, func(&x) int* gö
 olacaktı.
 
 
-///////////////
+/////////////////////////////////////////////
 ZOR
 
 	template <typename T, int N>
