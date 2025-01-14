@@ -689,7 +689,7 @@ Compile time'da bir tür ya da bir değer hesaplamak için kullanılan koda meta
 
 	template <std::size_t N>
 	struct Factorial {
-		static const std::size_t value = N > 1 ? N * Factorial::<N - 1>::value: 1;
+		static const std::size_t value = N > 1 ? N * Factorial<N - 1>::value: 1;
 	};
 
 	template <>
